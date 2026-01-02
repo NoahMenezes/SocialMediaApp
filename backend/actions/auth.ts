@@ -16,6 +16,31 @@ export async function signup(formData: FormData) {
       return { error: "All fields are required" };
     }
 
+    // Validate name
+    if (name.trim().length < 2) {
+      return { error: "Name must be at least 2 characters long" };
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return { error: "Please enter a valid email address" };
+    }
+
+    // Validate password strength
+    if (password.length < 8) {
+      return { error: "Password must be at least 8 characters long" };
+    }
+    if (!/[A-Z]/.test(password)) {
+      return { error: "Password must contain at least one uppercase letter" };
+    }
+    if (!/[a-z]/.test(password)) {
+      return { error: "Password must contain at least one lowercase letter" };
+    }
+    if (!/[0-9]/.test(password)) {
+      return { error: "Password must contain at least one number" };
+    }
+
     // Check if user already exists
     const existingUser = await db.query.users.findFirst({
       where: eq(users.email, email),
@@ -65,6 +90,12 @@ export async function login(formData: FormData) {
       return { error: "Email and password are required" };
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return { error: "Please enter a valid email address" };
+    }
+
     // Find user
     const user = await db.query.users.findFirst({
       where: eq(users.email, email),
@@ -100,8 +131,13 @@ export async function login(formData: FormData) {
 }
 
 export async function logout() {
-  (await cookies()).delete("userId");
-  return { success: true };
+  try {
+    (await cookies()).delete("userId");
+    return { success: true };
+  } catch (error) {
+    console.error("Logout error:", error);
+    return { error: "Failed to logout" };
+  }
 }
 
 export async function getCurrentUser() {
