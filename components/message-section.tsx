@@ -101,10 +101,11 @@ export function MessageSection({ user }: { user?: { name: string; email: string 
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar user={user} />
+    <div className="flex h-screen bg-background justify-center">
+      <div className="flex w-full max-w-[1600px]">
+        <Sidebar user={user} />
 
-      <div className="flex flex-1 gap-0">
+        <div className="flex flex-1 gap-0">
         {/* Conversations List */}
         <div className="w-80 border-r border-border flex flex-col">
           {/* Header */}
@@ -220,6 +221,7 @@ export function MessageSection({ user }: { user?: { name: string; email: string 
               </Button>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>

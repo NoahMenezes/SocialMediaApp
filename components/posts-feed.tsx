@@ -4,6 +4,10 @@ import { useState } from "react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sidebar } from "./sidebar"
 import { Search, Heart, MessageCircle, Repeat2, Share, MoreHorizontal, Image as ImageIcon, Smile, Calendar } from "lucide-react"
 
@@ -94,21 +98,34 @@ export function PostsFeed({ user }: { user?: { name: string; email: string } | n
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar user={user} />
+    <div className="flex h-screen bg-background justify-center">
+      <div className="flex w-full max-w-[1600px]">
+        <Sidebar user={user} />
 
-      <div className="flex flex-1 gap-0">
+        <div className="flex flex-1 gap-0">
         {/* Main Feed */}
         <div className="flex-1 border-r border-border flex flex-col max-w-2xl">
-          {/* Header */}
-          <div className="border-b border-border p-4 sticky top-0 bg-background/95 backdrop-blur-sm z-10">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-foreground">Home</h2>
+          {/* Header with Tabs */}
+          <div className="border-b border-border sticky top-0 bg-background/95 backdrop-blur-sm z-10">
+            <div className="p-4 pb-0">
+              <h2 className="text-xl font-bold text-foreground mb-4">Home</h2>
             </div>
-            <div className="flex gap-2 text-sm font-semibold">
-              <button className="flex-1 py-3 border-b-2 border-primary text-foreground">For you</button>
-              <button className="flex-1 py-3 text-muted-foreground hover:bg-muted/30 transition-colors">Following</button>
-            </div>
+            <Tabs defaultValue="for-you" className="w-full">
+              <TabsList className="w-full rounded-none bg-transparent border-b-0 h-auto p-0">
+                <TabsTrigger 
+                  value="for-you" 
+                  className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-4"
+                >
+                  For you
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="following" 
+                  className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-4"
+                >
+                  Following
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
 
           {/* Create Post */}
@@ -212,79 +229,90 @@ export function PostsFeed({ user }: { user?: { name: string; email: string } | n
         </div>
 
         {/* Right Sidebar - Search and Trends */}
-        <div className="w-80 p-4 space-y-4 overflow-y-auto">
-          {/* Search */}
-          <div className="sticky top-0 bg-background pb-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
-              <Input
-                placeholder="Search"
-                className="pl-10 bg-muted/30 border-0 rounded-full text-foreground placeholder:text-muted-foreground focus:bg-muted/50"
-              />
-            </div>
-          </div>
-
-          {/* Subscribe to Premium */}
-          <div className="bg-card border border-border rounded-2xl p-4">
-            <h3 className="text-xl font-bold text-foreground mb-2">Subscribe to Premium</h3>
-            <p className="text-sm text-muted-foreground mb-3">
-              Subscribe to unlock new features and if eligible, receive a share of revenue.
-            </p>
-            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full font-bold">
-              Subscribe
-            </Button>
-          </div>
-
-          {/* Today's News */}
-          <div className="bg-card border border-border rounded-2xl p-4">
-            <h3 className="text-xl font-bold text-foreground mb-4">Today's News</h3>
-            <div className="space-y-4">
-              {[
-                {
-                  category: "Other",
-                  title: "Rajinikanth's Thalaivar 173 Teases Big Update Tomorrow",
-                  posts: "14K posts",
-                },
-                {
-                  category: "Other",
-                  title: "Bigg Boss Tamil Season 9 Erupts in Heated Car Task Clash",
-                  posts: "3,402 posts",
-                },
-                {
-                  category: "Other",
-                  title: "Grok AI Faces Backlash for Generating Non-Consensual Explicit Images",
-                  posts: "222.9K posts",
-                },
-              ].map((news, index) => (
-                <div key={index} className="group cursor-pointer">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <p className="text-xs text-muted-foreground">{news.category} · {news.posts}</p>
-                      <p className="text-sm font-semibold text-foreground group-hover:underline mt-1">
-                        {news.title}
-                      </p>
-                    </div>
-                    <button className="p-1 rounded-full hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* What's happening */}
-          <div className="bg-card border border-border rounded-2xl p-4">
-            <h3 className="text-xl font-bold text-foreground mb-4">What's happening</h3>
-            <div className="space-y-4">
-              <div className="group cursor-pointer">
-                <p className="text-sm font-semibold text-foreground group-hover:underline">
-                  Latest tech trends and updates
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">Trending now</p>
+        <ScrollArea className="w-80 h-screen">
+          <div className="p-4 space-y-4">
+            {/* Search */}
+            <div className="sticky top-0 bg-background pb-4 z-10">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
+                <Input
+                  placeholder="Search"
+                  className="pl-10 bg-muted/30 border-0 rounded-full text-foreground placeholder:text-muted-foreground focus:bg-muted/50"
+                />
               </div>
             </div>
+
+            {/* Subscribe to Premium */}
+            <Card className="border-border">
+              <CardHeader>
+                <CardTitle className="text-xl">Subscribe to Premium</CardTitle>
+                <CardDescription>
+                  Subscribe to unlock new features and if eligible, receive a share of revenue.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-full font-bold">
+                  Subscribe
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Today's News */}
+            <Card className="border-border">
+              <CardHeader>
+                <CardTitle className="text-xl">Today's News</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {[
+                  {
+                    category: "Other",
+                    title: "Rajinikanth's Thalaivar 173 Teases Big Update Tomorrow",
+                    posts: "14K posts",
+                  },
+                  {
+                    category: "Other",
+                    title: "Bigg Boss Tamil Season 9 Erupts in Heated Car Task Clash",
+                    posts: "3,402 posts",
+                  },
+                  {
+                    category: "Other",
+                    title: "Grok AI Faces Backlash for Generating Non-Consensual Explicit Images",
+                    posts: "222.9K posts",
+                  },
+                ].map((news, index) => (
+                  <div key={index} className="group cursor-pointer hover:bg-muted/50 p-2 rounded-lg transition-colors">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="text-xs text-muted-foreground">{news.category} · {news.posts}</p>
+                        <p className="text-sm font-semibold text-foreground group-hover:underline mt-1">
+                          {news.title}
+                        </p>
+                      </div>
+                      <button className="p-1 rounded-full hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* What's happening */}
+            <Card className="border-border">
+              <CardHeader>
+                <CardTitle className="text-xl">What's happening</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="group cursor-pointer hover:bg-muted/50 p-2 rounded-lg transition-colors">
+                  <p className="text-sm font-semibold text-foreground group-hover:underline">
+                    Latest tech trends and updates
+                  </p>
+                  <Badge variant="secondary" className="mt-2">Trending now</Badge>
+                </div>
+              </CardContent>
+            </Card>
           </div>
+        </ScrollArea>
         </div>
       </div>
     </div>
