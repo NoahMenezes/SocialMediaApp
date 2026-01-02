@@ -15,7 +15,7 @@ const menuItems = [
     { name: 'About', href: '#link' },
 ]
 
-export const HeroHeader = () => {
+export const HeroHeader = ({ user }: { user?: { name: string; email: string } | null }) => {
     const [menuState, setMenuState] = React.useState(false)
     const [scrolled, setScrolled] = React.useState(false)
 
@@ -27,6 +27,12 @@ export const HeroHeader = () => {
         })
         return () => unsubscribe()
     }, [scrollYProgress])
+
+    const handleLogout = async () => {
+        const { logout } = await import('@/backend/actions/auth');
+        await logout();
+        window.location.reload();
+    };
 
     return (
         <header>
@@ -82,21 +88,37 @@ export const HeroHeader = () => {
                             </div>
                             <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit">
                                 <ModeToggle/>
-                                <Button
-                                    asChild
-                                    variant="outline"
-                                    size="sm">
-                                    <Link href="/login">
-                                        <span>Login</span>
-                                    </Link>
-                                </Button>
-                                <Button
-                                    asChild
-                                    size="sm">
-                                    <Link href="/signup">
-                                        <span>Sign Up</span>
-                                    </Link>
-                                </Button>
+                                {user ? (
+                                    <>
+                                        <div className="flex items-center text-sm font-medium">
+                                            Hi, {user.name}
+                                        </div>
+                                        <Button
+                                            onClick={handleLogout}
+                                            variant="outline"
+                                            size="sm">
+                                            <span>Logout</span>
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Button
+                                            asChild
+                                            variant="outline"
+                                            size="sm">
+                                            <Link href="/login">
+                                                <span>Login</span>
+                                            </Link>
+                                        </Button>
+                                        <Button
+                                            asChild
+                                            size="sm">
+                                            <Link href="/signup">
+                                                <span>Sign Up</span>
+                                            </Link>
+                                        </Button>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>

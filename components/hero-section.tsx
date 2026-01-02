@@ -27,10 +27,10 @@ const transitionVariants = {
     },
 }
 
-export default function HeroSection() {
+export default function HeroSection({ user }: { user?: { name: string; email: string } | null }) {
     return (
         <>
-            <HeroHeader />
+            <HeroHeader user={user} />
             <main className="overflow-hidden">
                 <div
                     aria-hidden

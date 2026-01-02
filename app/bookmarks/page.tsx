@@ -1,0 +1,18 @@
+import { getCurrentUser } from "@/backend/actions/auth";
+import { Sidebar } from "@/components/sidebar";
+
+export default async function BookmarksPage() {
+  const user = await getCurrentUser();
+  
+  return (
+    <div className="flex h-screen bg-background">
+      <Sidebar user={user} />
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-foreground mb-4">Bookmarks</h1>
+          <p className="text-muted-foreground">Coming soon...</p>
+        </div>
+      </div>
+    </div>
+  );
+}

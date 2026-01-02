@@ -1,5 +1,7 @@
-import HeroSection from "@/components/hero-section";
+import { PostsFeed } from "@/components/posts-feed";
+import { getCurrentUser } from "@/backend/actions/auth";
 
-export default function Home() {
-  return <HeroSection />;
+export default async function Home() {
+  const user = await getCurrentUser();
+  return <PostsFeed user={user} />;
 }

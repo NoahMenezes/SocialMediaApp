@@ -1,10 +1,12 @@
 import { SignupForm } from "@/components/signup-form";
 import { HeroHeader } from "@/components/header";
+import { getCurrentUser } from "@/backend/actions/auth";
 
-export default function SignupPage() {
+export default async function SignupPage() {
+  const user = await getCurrentUser();
   return (
     <>
-      <HeroHeader />
+      <HeroHeader user={user} />
       <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12 pt-24">
         <div className="w-full max-w-md">
           <SignupForm />
