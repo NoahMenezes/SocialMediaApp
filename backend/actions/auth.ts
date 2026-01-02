@@ -4,7 +4,13 @@ import { db } from "@/backend/db";
 import { users } from "@/backend/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import { cookies } from "next/headers";
+import { signIn as nextAuthSignIn, signOut as nextAuthSignOut } from "@/auth.config";
+import { auth } from "@/auth.config";
+import { AuthError } from "next-auth";
+
+// ============================================
+// EMAIL/PASSWORD AUTHENTICATION
+// ============================================
 
 export async function signup(formData: FormData) {
   try {
@@ -60,20 +66,14 @@ export async function signup(formData: FormData) {
         name,
         email,
         password: hashedPassword,
+        emailVerified: new Date(), // Auto-verify for now, or implement email verification
       })
       .returning();
-
-    // Set session cookie
-    (await cookies()).set("userId", newUser.id.toString(), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-    });
 
     return {
       success: true,
       user: { id: newUser.id, name: newUser.name, email: newUser.email },
+      message: "Account created successfully! Please log in.",
     };
   } catch (error) {
     console.error("Signup error:", error);
@@ -105,6 +105,13 @@ export async function login(formData: FormData) {
       return { error: "Invalid email or password" };
     }
 
+    // Check if user has a password (OAuth users might not)
+    if (!user.password) {
+      return {
+        error: "This account uses Google sign-in. Please sign in with Google."
+      };
+    }
+
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password);
 
@@ -112,54 +119,101 @@ export async function login(formData: FormData) {
       return { error: "Invalid email or password" };
     }
 
-    // Set session cookie
-    (await cookies()).set("userId", user.id.toString(), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-    });
+    // Use NextAuth credentials sign-in (if you have it configured)
+    // Or create a session manually
+    // For now, we'll use NextAuth's credentials provider
+    try {
+      await nextAuthSignIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
 
-    return {
-      success: true,
-      user: { id: user.id, name: user.name, email: user.email },
-    };
+      return {
+        success: true,
+        user: { id: user.id, name: user.name, email: user.email },
+      };
+    } catch (error) {
+      if (error instanceof AuthError) {
+        return { error: "Authentication failed. Please try again." };
+      }
+      throw error;
+    }
   } catch (error) {
     console.error("Login error:", error);
     return { error: "Failed to login" };
   }
 }
 
-export async function logout() {
-  try {
-    (await cookies()).delete("userId");
-    return { success: true };
-  } catch (error) {
-    console.error("Logout error:", error);
-    return { error: "Failed to logout" };
-  }
+// ============================================
+// GOOGLE OAUTH AUTHENTICATION
+// ============================================
+
+export async function signInWithGoogle(formData?: FormData): Promise<void> {
+  await nextAuthSignIn("google", {
+    redirectTo: "/", // Redirect to home page after successful login
+  });
 }
+
+// ============================================
+// LOGOUT
+// ============================================
+
+export async function logout(formData?: FormData): Promise<void> {
+  await nextAuthSignOut({
+    redirectTo: "/login",
+  });
+}
+
+// ============================================
+// GET CURRENT USER
+// ============================================
 
 export async function getCurrentUser() {
   try {
-    const cookieStore = await cookies();
-    const userId = cookieStore.get("userId")?.value;
+    const session = await auth();
 
-    if (!userId) {
+    if (!session || !session.user) {
       return null;
     }
 
+    // Fetch full user details from database
     const user = await db.query.users.findFirst({
-      where: eq(users.id, parseInt(userId)),
+      where: eq(users.id, session.user.id!),
     });
 
     if (!user) {
       return null;
     }
 
-    return { id: user.id, name: user.name, email: user.email };
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      image: user.image,
+      emailVerified: user.emailVerified,
+    };
   } catch (error) {
     console.error("Get current user error:", error);
     return null;
   }
+}
+
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+
+/**
+ * Check if user is authenticated
+ */
+export async function isAuthenticated(): Promise<boolean> {
+  const session = await auth();
+  return !!session?.user;
+}
+
+/**
+ * Get user session
+ */
+export async function getSession() {
+  return await auth();
 }
