@@ -1,1 +1,0 @@
-const publicRoutes = ['/login', '/signup', '/about', '/contact']
