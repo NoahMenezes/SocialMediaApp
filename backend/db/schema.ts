@@ -102,9 +102,58 @@ export const notifications = sqliteTable('notifications', {
     createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
 });
 
+// Conversations table
+export const conversations = sqliteTable('conversations', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+});
+
+// Conversation participants table
+export const conversationParticipants = sqliteTable('conversation_participants', {
+    conversationId: text('conversation_id').notNull().references(() => conversations.id, { onDelete: 'cascade' }),
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    joinedAt: integer('joined_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+}, (t) => ({
+    pk: primaryKey({ columns: [t.conversationId, t.userId] }),
+}));
+
+// Messages table
+export const messages = sqliteTable('messages', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    conversationId: text('conversation_id').notNull().references(() => conversations.id, { onDelete: 'cascade' }),
+    senderId: text('sender_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    content: text('content').notNull(),
+    read: integer('read', { mode: 'boolean' }).default(false),
+    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+});
+
+// Comments table
+export const comments = sqliteTable('comments', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    postId: text('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' }),
+    content: text('content').notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+});
+
+// Reposts table
+export const reposts = sqliteTable('reposts', {
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    postId: text('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+}, (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.postId] }),
+}));
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Post = typeof posts.$inferSelect;
 export type NewPost = typeof posts.$inferInsert;
 export type Notification = typeof notifications.$inferSelect;
+export type Conversation = typeof conversations.$inferSelect;
+export type Message = typeof messages.$inferSelect;
+export type ConversationParticipant = typeof conversationParticipants.$inferSelect;
+export type Comment = typeof comments.$inferSelect;
+export type Repost = typeof reposts.$inferSelect;
 
