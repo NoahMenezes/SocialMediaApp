@@ -43,8 +43,8 @@ async function checkDatabaseHealth(): Promise<DatabaseHealthCheck> {
 
   try {
     // Dynamic import to ensure env vars are loaded first
-    const { db } = await import("../backend/db/index.js");
-    const { users } = await import("../backend/db/schema.js");
+    const { db } = await import("../backend/db/index.ts");
+    const { users } = await import("../backend/db/schema.ts");
     const { sql } = await import("drizzle-orm");
 
     // Test 1: Check basic connection

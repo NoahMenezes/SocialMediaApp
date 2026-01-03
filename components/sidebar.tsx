@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation"
 import { FadeIn, SlideIn } from "@/components/ui/fade-in"
 import { signOut } from "next-auth/react"
 
-export function Sidebar({ user }: { user?: { name: string; email: string } | null }) {
+export function Sidebar({ user }: { user?: { name: string; email: string; image?: string | null } | null }) {
   const pathname = usePathname()
   
   const navItems = [
@@ -57,31 +57,37 @@ export function Sidebar({ user }: { user?: { name: string; email: string } | nul
       {/* Post Button */}
       <div className="px-2 xl:px-4 py-4 w-full">
         <FadeIn delay={0.5}>
-          <Button className="w-12 h-12 xl:w-full xl:h-12 bg-primary hover:bg-primary/90 text-white rounded-full flex items-center justify-center shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all hover:scale-105 active:scale-95">
-            <PenSquare className="w-6 h-6 xl:hidden" />
-            <span className="hidden xl:block font-bold text-lg">Post</span>
-          </Button>
+          <Link href="/#post-input" className="w-full">
+            <Button className="w-12 h-12 xl:w-full xl:h-12 bg-primary hover:bg-primary/90 text-white rounded-full flex items-center justify-center shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all hover:scale-105 active:scale-95">
+              <PenSquare className="w-6 h-6 xl:hidden" />
+              <span className="hidden xl:block font-bold text-lg">Post</span>
+            </Button>
+          </Link>
         </FadeIn>
       </div>
+
 
       {/* User Profile */}
       {user ? (
         <div className="p-2 xl:p-4 mt-auto w-full">
-          <button className="w-full flex items-center justify-center xl:justify-between gap-3 p-2 xl:px-4 xl:py-3 rounded-full hover:bg-muted/50 transition-all group">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
-                <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} />
-                <AvatarFallback>{user.name[0]}</AvatarFallback>
-              </Avatar>
-              <div className="hidden xl:block text-left min-w-0">
-                <p className="font-bold text-sm text-foreground truncate leading-tight">{user.name}</p>
-                <p className="text-xs text-muted-foreground truncate">@{user.name.replace(/\s+/g, '')}</p>
+          <Link href="/profile" className="w-full block">
+            <button className="w-full flex items-center justify-center xl:justify-between gap-3 p-2 xl:px-4 xl:py-3 rounded-full hover:bg-muted/50 transition-all group">
+              <div className="flex items-center gap-3">
+                <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
+                  <AvatarImage src={user.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} />
+                  <AvatarFallback>{user.name[0]}</AvatarFallback>
+                </Avatar>
+                <div className="hidden xl:block text-left min-w-0">
+                  <p className="font-bold text-sm text-foreground truncate leading-tight">{user.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">@{user.name.replace(/\s+/g, '')}</p>
+                </div>
               </div>
-            </div>
-            <MoreHorizontal className="hidden xl:block w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100" />
-          </button>
+              <MoreHorizontal className="hidden xl:block w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100" />
+            </button>
+          </Link>
         </div>
       ) : (
+
         <div className="p-2 xl:p-4 mt-auto w-full">
            <Link href="/login" className="flex items-center justify-center gap-2 p-3 text-muted-foreground hover:text-primary transition-colors">
               <LogOut className="w-6 h-6" />

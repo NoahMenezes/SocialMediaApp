@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { MoreHorizontal, MessageCircle, Repeat2, Heart, Share, Sparkles } from "lucide-react"
+import { MoreHorizontal, MessageCircle, Repeat2, Heart, Share } from "lucide-react"
+import Link from "next/link"
 
 interface ActionButtonProps {
   icon: any
@@ -87,16 +88,21 @@ export function PostCard({ post, index }: { post: Post; index: number }) {
     >
       <div className="flex gap-4">
         <motion.div whileHover={{ scale: 1.1 }} transition={{ type: "spring", stiffness: 400 }}>
-          <Avatar className="h-10 w-10 flex-shrink-0 cursor-pointer">
-            <AvatarImage src={post.author.avatar} />
-            <AvatarFallback>{post.author.name[0]}</AvatarFallback>
-          </Avatar>
+          <Link href={`/profile/${post.author.username}`}>
+            <Avatar className="h-10 w-10 flex-shrink-0 cursor-pointer">
+              <AvatarImage src={post.author.avatar} />
+              <AvatarFallback>{post.author.name[0]}</AvatarFallback>
+            </Avatar>
+          </Link>
         </motion.div>
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-bold text-foreground hover:underline cursor-pointer">{post.author.name}</span>
+              <Link href={`/profile/${post.author.username}`} className="font-bold text-foreground hover:underline cursor-pointer">
+                {post.author.name}
+              </Link>
+
               {post.author.verified && (
                   <div className="bg-primary text-white rounded-full p-[1px]">
                     <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
@@ -106,6 +112,7 @@ export function PostCard({ post, index }: { post: Post; index: number }) {
               <span className="text-muted-foreground text-sm">·</span>
               <span className="text-muted-foreground text-sm hover:underline hover:text-primary transition-colors">{post.timestamp}</span>
             </div>
+
             <motion.button 
               whileHover={{ rotate: 90 }}
               className="p-2 -mr-2 rounded-full hover:bg-primary/10 hover:text-primary text-muted-foreground transition-colors"

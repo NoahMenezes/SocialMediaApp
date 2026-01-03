@@ -1,26 +1,27 @@
 import { getCurrentUser } from "@/backend/actions/auth";
-import { Sidebar } from "@/components/sidebar";
+import { redirect } from "next/navigation";
+import { db } from "@/backend/db";
+import { users } from "@/backend/db/schema";
+import { eq } from "drizzle-orm";
 
-export default async function ProfilePage() {
-  const user = await getCurrentUser();
+export default async function ProfileRedirect() {
+  const sessionUser = await getCurrentUser();
   
-  return (
-    <div className="flex h-screen bg-background justify-center">
-      <div className="flex w-full max-w-[1600px]">
-        <Sidebar user={user} />
-        <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-foreground mb-4">Profile</h1>
-          {user && (
-            <div className="mt-4">
-              <p className="text-lg text-foreground">{user.name}</p>
-              <p className="text-muted-foreground">{user.email}</p>
-            </div>
-          )}
-          <p className="text-muted-foreground mt-4">Full profile coming soon...</p>
-        </div>
-        </div>
-      </div>
-    </div>
-  );
+  if (!sessionUser || !sessionUser.email) {
+      redirect("/login");
+  }
+
+  // Fetch full user to get username
+  const user = await db.query.users.findFirst({
+    where: eq(users.email, sessionUser.email),
+  });
+
+  if (!user || !user.username) {
+    // If no username, maybe we should force them to set one or just use a fallback
+    redirect("/");
+  }
+
+  redirect(`/profile/${user.username}`);
 }
+
+

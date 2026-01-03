@@ -9,6 +9,8 @@ export const users = sqliteTable('users', {
     emailVerified: integer('email_verified', { mode: 'timestamp' }),
     image: text('image'),
     password: text('password'), // Optional for OAuth users
+    bio: text('bio'),
+    username: text('username'),
     createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
 });
 
@@ -53,5 +55,56 @@ export const verificationTokens = sqliteTable('verification_tokens', {
     }),
 }));
 
+// Posts table
+export const posts = sqliteTable('posts', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    content: text('content').notNull(),
+    image: text('image'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+});
+
+// Likes table
+export const likes = sqliteTable('likes', {
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    postId: text('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+}, (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.postId] }),
+}));
+
+// Bookmarks table
+export const bookmarks = sqliteTable('bookmarks', {
+    userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    postId: text('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+}, (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.postId] }),
+}));
+
+// Follows table
+export const follows = sqliteTable('follows', {
+    followerId: text('follower_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    followingId: text('following_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+}, (t) => ({
+    pk: primaryKey({ columns: [t.followerId, t.followingId] }),
+}));
+
+// Notifications table
+export const notifications = sqliteTable('notifications', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    recipientId: text('recipient_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    senderId: text('sender_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    type: text('type', { enum: ['like', 'follow', 'reply'] }).notNull(),
+    postId: text('post_id').references(() => posts.id, { onDelete: 'set null' }),
+    read: integer('read', { mode: 'boolean' }).default(false),
+    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+export type Post = typeof posts.$inferSelect;
+export type NewPost = typeof posts.$inferInsert;
+export type Notification = typeof notifications.$inferSelect;
+

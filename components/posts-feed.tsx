@@ -4,13 +4,12 @@ import { useState } from "react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Sidebar } from "./sidebar"
-import { RightSidebar } from "./right-sidebar"
+import { Textarea } from "@/components/ui/textarea"
+
 import { PostCard } from "@/components/post-card"
-import { Heart, MessageCircle, Repeat2, Share, MoreHorizontal, Image as ImageIcon, Smile, Calendar, Sparkles } from "lucide-react"
+import { Image as ImageIcon, Smile, Calendar, Sparkles } from "lucide-react"
 import { FadeIn } from "@/components/ui/fade-in"
 import { AnimatePresence, motion } from "framer-motion"
-import { Card } from "@/components/ui/card"
 
 interface Post {
   id: string
@@ -99,15 +98,9 @@ export function PostsFeed({ user }: { user?: { name: string; email: string } | n
     }
   }
 
-  return (
-    <div className="min-h-screen bg-background flex justify-center">
-      <div className="w-full max-w-[1400px] flex justify-center xl:justify-between relative">
-        {/* Left Sidebar */}
-        <Sidebar user={user} />
 
-        {/* Main Feed */}
-        <main className="flex-1 max-w-[700px] w-full border-x border-border/40 min-h-screen pb-20">
-          
+  return (
+    <>
           {/* Header */}
           <div className="sticky top-0 bg-background/80 backdrop-blur-md z-30 border-b border-border/40">
              <div className="px-4 py-3 flex items-center justify-between">
@@ -148,15 +141,17 @@ export function PostsFeed({ user }: { user?: { name: string; email: string } | n
                   <AvatarFallback>{user.name[0]}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 space-y-4">
-                   <div className="relative">
-                      <textarea
-                        placeholder="What is happening?!"
-                        value={newPost}
-                        onChange={(e) => setNewPost(e.target.value)}
-                        className="w-full bg-transparent text-xl font-medium placeholder:text-muted-foreground/50 resize-none outline-none min-h-[50px] py-2"
-                        rows={2}
-                      />
-                   </div>
+                  <div className="relative">
+                    <Textarea
+                      id="post-input"
+                      placeholder="What is happening?!"
+                      value={newPost}
+                      onChange={(e) => setNewPost(e.target.value)}
+                      className="w-full bg-transparent text-xl font-medium placeholder:text-muted-foreground/50 resize-none outline-none min-h-[50px] py-2 border-none focus-visible:ring-0 shadow-none"
+                      rows={2}
+                    />
+                  </div>
+
                    
                    <div className="flex items-center justify-between pt-2 border-t border-border/40">
                       <div className="flex gap-1 -ml-2">
@@ -192,12 +187,6 @@ export function PostsFeed({ user }: { user?: { name: string; email: string } | n
               ))}
             </AnimatePresence>
           </div>
-        </main>
-
-        {/* Right Sidebar */}
-        <RightSidebar />
-
-      </div>
-    </div>
+    </>
   )
 }
