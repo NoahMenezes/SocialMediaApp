@@ -11,6 +11,7 @@ import { Image as ImageIcon, Smile, Calendar, Sparkles } from "lucide-react"
 import { FadeIn } from "@/components/ui/fade-in"
 import { AnimatePresence, motion } from "framer-motion"
 import { createPost } from "@/backend/actions/posts"
+import { Stories } from "@/components/stories"
 
 interface Post {
   id: string
@@ -28,10 +29,10 @@ interface Post {
   image?: string | null
 }
 
-export function PostsFeed({ 
-  user, 
-  initialPosts = [] 
-}: { 
+export function PostsFeed({
+  user,
+  initialPosts = []
+}: {
   user?: { id: string; name: string; email: string } | null;
   initialPosts?: Post[];
 }) {
@@ -50,7 +51,7 @@ export function PostsFeed({
       setIsPosting(true)
       try {
         const created = await createPost(newPost)
-        
+
         const optimisticPost: Post = {
           id: created.id,
           author: {
@@ -65,7 +66,7 @@ export function PostsFeed({
           comments: 0,
           reposts: 0,
         }
-        
+
         setPosts([optimisticPost, ...posts])
         setNewPost("")
       } catch (error) {
@@ -89,14 +90,14 @@ export function PostsFeed({
             {["For you", "Following"].map((tab) => {
               const isActive = activeTab === tab.toLowerCase().replace(" ", "-")
               return (
-                <TabsTrigger 
+                <TabsTrigger
                   key={tab}
-                  value={tab.toLowerCase().replace(" ", "-")} 
+                  value={tab.toLowerCase().replace(" ", "-")}
                   className="relative rounded-none border-b-0 text-muted-foreground data-[state=active]:text-foreground py-4 transition-colors hover:bg-muted/10 font-bold"
                 >
                   <span className="relative z-10">{tab}</span>
                   {isActive && (
-                    <motion.div 
+                    <motion.div
                       layoutId="activeTabMobile"
                       className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-1 bg-primary rounded-t-full"
                       transition={{ type: "spring", stiffness: 500, damping: 30 }}
@@ -108,6 +109,9 @@ export function PostsFeed({
           </TabsList>
         </Tabs>
       </div>
+
+      {/* Stories */}
+      <Stories user={user} />
 
       {/* Create Post Card */}
       {user && (
@@ -132,8 +136,8 @@ export function PostsFeed({
               <div className="flex items-center justify-between pt-2 border-t border-border/40">
                 <div className="flex gap-1 -ml-2">
                   {[ImageIcon, Smile, Calendar].map((Icon, i) => (
-                    <motion.button 
-                      key={i} 
+                    <motion.button
+                      key={i}
                       whileHover={{ scale: 1.1, backgroundColor: "rgba(var(--primary), 0.1)" }}
                       whileTap={{ scale: 0.9 }}
                       className="p-2 rounded-full text-primary transition-colors hover:bg-primary/10"
