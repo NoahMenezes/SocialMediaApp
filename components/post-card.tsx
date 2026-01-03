@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { motion, AnimatePresence } from "motion/react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { MoreHorizontal, MessageCircle, Repeat2, Heart, Share, Sparkles } from "lucide-react"
 

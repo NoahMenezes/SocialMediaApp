@@ -9,7 +9,7 @@ import { RightSidebar } from "./right-sidebar"
 import { PostCard } from "@/components/post-card"
 import { Heart, MessageCircle, Repeat2, Share, MoreHorizontal, Image as ImageIcon, Smile, Calendar, Sparkles } from "lucide-react"
 import { FadeIn } from "@/components/ui/fade-in"
-import { AnimatePresence, motion } from "motion/react"
+import { AnimatePresence, motion } from "framer-motion"
 import { Card } from "@/components/ui/card"
 
 interface Post {

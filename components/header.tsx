@@ -5,7 +5,7 @@ import { Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import React from 'react'
 import { cn } from '@/lib/utils'
-import { useScroll } from 'motion/react'
+import { useScroll } from 'framer-motion'
 import { ModeToggle } from './ui/ModeToggle'
 
 const menuItems = [
