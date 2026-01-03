@@ -106,11 +106,11 @@ export function ProfileView({
             
              <div className="flex items-center gap-8 pt-2">
                <div className="flex items-center gap-1.5 hover:underline decoration-muted-foreground cursor-pointer group">
-                  <span className="font-bold text-foreground text-lg">248</span>
+                  <span className="font-bold text-foreground text-lg">0</span>
                   <span className="text-muted-foreground group-hover:text-foreground transition-colors">Following</span>
                </div>
                <div className="flex items-center gap-1.5 hover:underline decoration-muted-foreground cursor-pointer group">
-                  <span className="font-bold text-foreground text-lg">14.2k</span>
+                  <span className="font-bold text-foreground text-lg">0</span>
                   <span className="text-muted-foreground group-hover:text-foreground transition-colors">Followers</span>
                </div>
             </div>
