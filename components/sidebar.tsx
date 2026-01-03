@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, Search, Bell, Mail, Bookmark, User, MoreHorizontal, PenSquare, LogOut } from "lucide-react"
+import { Home, Search, Bell, Mail, Bookmark, User, MoreHorizontal, PenSquare, LogOut, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import Link from "next/link"
@@ -10,14 +10,15 @@ import { signOut } from "next-auth/react"
 
 export function Sidebar({ user }: { user?: { name: string; email: string; image?: string | null } | null }) {
   const pathname = usePathname()
-  
+
   const navItems = [
     { icon: Home, label: "Home", href: "/" },
-    { icon: Search, label: "Explore", href: "/explore" },
+    { icon: Search, label: "Search", href: "/explore" },
     { icon: Bell, label: "Notifications", href: "/notifications" },
     { icon: Mail, label: "Messages", href: "/messages" },
     { icon: Bookmark, label: "Bookmarks", href: "/bookmarks" },
     { icon: User, label: "Profile", href: "/profile" },
+    { icon: Settings, label: "Settings", href: "/settings" },
   ]
 
   return (
@@ -40,11 +41,10 @@ export function Sidebar({ user }: { user?: { name: string; email: string; image?
             <SlideIn key={item.label} delay={0.1 + (i * 0.05)}>
               <Link
                 href={item.href}
-                className={`flex items-center justify-center xl:justify-start gap-4 p-3 rounded-full transition-all duration-200 group ${
-                  isActive 
-                    ? "font-bold text-primary bg-primary/10" 
-                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                }`}
+                className={`flex items-center justify-center xl:justify-start gap-4 p-3 rounded-full transition-all duration-200 group ${isActive
+                  ? "font-bold text-primary bg-primary/10"
+                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                  }`}
               >
                 <Icon className={`w-7 h-7 xl:w-6 xl:h-6 ${isActive ? "fill-current" : ""}`} strokeWidth={isActive ? 2.5 : 2} />
                 <span className="hidden xl:block text-xl">{item.label}</span>
@@ -89,9 +89,9 @@ export function Sidebar({ user }: { user?: { name: string; email: string; image?
       ) : (
 
         <div className="p-2 xl:p-4 mt-auto w-full">
-           <Link href="/login" className="flex items-center justify-center gap-2 p-3 text-muted-foreground hover:text-primary transition-colors">
-              <LogOut className="w-6 h-6" />
-           </Link>
+          <Link href="/login" className="flex items-center justify-center gap-2 p-3 text-muted-foreground hover:text-primary transition-colors">
+            <LogOut className="w-6 h-6" />
+          </Link>
         </div>
       )}
     </aside>
