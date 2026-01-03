@@ -151,7 +151,6 @@ export const authOptions = {
         },
         async session({ session, token }: any) {
             if (session.user) {
-                // @ts-ignore
                 session.user.id = token.id as string;
                 session.user.email = token.email as string;
                 session.user.name = token.name as string;

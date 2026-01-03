@@ -37,68 +37,23 @@ export function RightSidebar() {
             </CardContent>
           </Card>
 
-          {/* Today's News */}
-          <Card className="border-border/50 shadow-sm hover:shadow-md transition-all duration-300">
+          {/* Today's News - Placeholder for API data */}
+          <Card className="border-border/50 shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-bold">Today's News</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-1">
-              {[
-                {
-                  category: "Entertainment",
-                  title: "Rajinikanth's Thalaivar 173 Teases Big Update Tomorrow",
-                  posts: "14K posts",
-                },
-                {
-                  category: "Reality TV",
-                  title: "Bigg Boss Tamil Season 9 Erupts in Heated Car Task Clash",
-                  posts: "3,402 posts",
-                },
-                {
-                  category: "Technology",
-                  title: "AI revolutionizes the way we code: The rise of Agentic AI",
-                  posts: "222.9K posts",
-                },
-              ].map((news, index) => (
-                <div key={index} className="group cursor-pointer hover:bg-muted/30 -mx-4 px-4 py-3 transition-colors rounded-md">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 pr-2">
-                      <p className="text-xs text-muted-foreground font-medium flex items-center gap-1">
-                        {news.category} 
-                        <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/50" /> 
-                        {news.posts}
-                      </p>
-                      <p className="text-sm font-semibold text-foreground leading-snug mt-1 group-hover:text-primary transition-colors">
-                        {news.title}
-                      </p>
-                    </div>
-                    <button className="p-1 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
+            <CardContent className="h-32 flex items-center justify-center text-muted-foreground text-sm">
+              Stay tuned for the latest updates.
             </CardContent>
           </Card>
 
-          {/* What's happening */}
-          <Card className="border-border/50 shadow-sm hover:shadow-md transition-all duration-300">
+          {/* Trending Now - Placeholder for API data */}
+          <Card className="border-border/50 shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-bold">Trending Now</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="group cursor-pointer hover:bg-muted/30 -mx-4 px-4 py-3 transition-colors">
-                <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-                  #NextJS15
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">Development • 52K posts</p>
-              </div>
-               <div className="group cursor-pointer hover:bg-muted/30 -mx-4 px-4 py-3 transition-colors">
-                <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-                  #WebDesign
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">Design • 12K posts</p>
-              </div>
+            <CardContent className="h-32 flex items-center justify-center text-muted-foreground text-sm text-center px-4">
+              Explore what's happening around the world.
             </CardContent>
           </Card>
           

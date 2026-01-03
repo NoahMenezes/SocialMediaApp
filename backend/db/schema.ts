@@ -57,9 +57,9 @@ export const verificationTokens = sqliteTable('verification_tokens', {
     identifier: text('identifier').notNull(),
     token: text('token').notNull(),
     expires: integer('expires', { mode: 'timestamp' }).notNull(),
-}, (verificationToken) => ({
+}, (vt) => ({
     compoundKey: primaryKey({
-        columns: [verificationToken.identifier, verificationToken.token],
+        columns: [vt.identifier, vt.token],
     }),
 }));
 

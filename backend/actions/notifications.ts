@@ -1,45 +1,52 @@
-'use server';
+"use server";
+
+import { db } from "@/backend/db";
+import { notifications, users } from "@/backend/db/schema";
+import { eq, and, desc } from "drizzle-orm";
+import { auth } from "@/auth.config";
+import { createMastodonClient } from "../lib/mastodon-client";
+import { createSyncService } from "../lib/mastodon-sync";
+import { revalidatePath } from "next/cache";
 
 /**
- * Notification Actions
- * 
- * Server actions for managing notifications.
- * Supports both local notifications and Mastodon integration.
+ * Get user's notifications formatted for the UI
  */
-
-import { db } from '../db';
-import { notifications, users } from '../db/schema';
-import { eq, and, desc } from 'drizzle-orm';
-import { auth } from '@/auth.config';
-import { createMastodonClient } from '../lib/mastodon-client';
-import { createSyncService } from '../lib/mastodon-sync';
-import { revalidatePath } from 'next/cache';
-
-/**
- * Get user's notifications
- */
-export async function getNotifications(limit: number = 20, offset: number = 0) {
+export async function getNotifications(limit: number = 50, offset: number = 0) {
     try {
         const session = await auth();
-        if (!session?.user?.id) {
-            return { error: 'Unauthorized' };
-        }
+        if (!session?.user?.id) return [];
 
-        const userNotifications = await db.query.notifications.findMany({
-            where: eq(notifications.recipientId, session.user.id),
-            limit,
-            offset,
-            orderBy: [desc(notifications.createdAt)],
-            with: {
-                sender: true,
-                post: true,
+        const results = await db.select({
+            id: notifications.id,
+            type: notifications.type,
+            read: notifications.read,
+            createdAt: notifications.createdAt,
+            actor: {
+                name: users.name,
+                image: users.image,
             },
-        });
+        })
+            .from(notifications)
+            .innerJoin(users, eq(notifications.senderId, users.id))
+            .where(eq(notifications.recipientId, session.user!.id))
+            .orderBy(desc(notifications.createdAt))
+            .limit(limit)
+            .offset(offset);
 
-        return { success: true, notifications: userNotifications };
+        return results.map(n => ({
+            id: n.id,
+            type: n.type,
+            read: n.read,
+            time: n.createdAt ? new Date(n.createdAt).toLocaleDateString() : 'recently',
+            actor: {
+                name: n.actor.name,
+                avatar: n.actor.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${n.actor.name}`,
+            },
+            content: n.type === 'like' ? 'liked your post' : n.type === 'follow' ? 'followed you' : 'replied to your post',
+        }));
     } catch (error) {
         console.error('Error fetching notifications:', error);
-        return { error: 'Failed to fetch notifications' };
+        return [];
     }
 }
 
@@ -55,7 +62,7 @@ export async function getUnreadNotificationCount() {
 
         const unreadNotifications = await db.query.notifications.findMany({
             where: and(
-                eq(notifications.recipientId, session.user.id),
+                eq(notifications.recipientId, session.user!.id),
                 eq(notifications.read, false)
             ),
         });
@@ -86,7 +93,7 @@ export async function markNotificationAsRead(notificationId: string) {
             return { error: 'Notification not found' };
         }
 
-        if (notification.recipientId !== session.user.id) {
+        if (notification.recipientId !== session.user!.id) {
             return { error: 'Unauthorized' };
         }
 
@@ -95,7 +102,7 @@ export async function markNotificationAsRead(notificationId: string) {
             .set({ read: true })
             .where(eq(notifications.id, notificationId));
 
-        revalidatePath('/');
+        revalidatePath('/notifications');
         return { success: true };
     } catch (error) {
         console.error('Error marking notification as read:', error);
@@ -117,12 +124,12 @@ export async function markAllNotificationsAsRead() {
             .set({ read: true })
             .where(
                 and(
-                    eq(notifications.recipientId, session.user.id),
+                    eq(notifications.recipientId, session.user!.id),
                     eq(notifications.read, false)
                 )
             );
 
-        revalidatePath('/');
+        revalidatePath('/notifications');
         return { success: true };
     } catch (error) {
         console.error('Error marking all notifications as read:', error);
@@ -149,14 +156,14 @@ export async function deleteNotification(notificationId: string) {
             return { error: 'Notification not found' };
         }
 
-        if (notification.recipientId !== session.user.id) {
+        if (notification.recipientId !== session.user!.id) {
             return { error: 'Unauthorized' };
         }
 
         // Delete notification
         await db.delete(notifications).where(eq(notifications.id, notificationId));
 
-        revalidatePath('/');
+        revalidatePath('/notifications');
         return { success: true };
     } catch (error) {
         console.error('Error deleting notification:', error);
@@ -176,7 +183,7 @@ export async function syncMastodonNotifications() {
 
         // Get user's Mastodon credentials
         const user = await db.query.users.findFirst({
-            where: eq(users.id, session.user.id),
+            where: eq(users.id, session.user!.id),
         });
 
         if (!user?.mastodonAccessToken || !user?.mastodonInstanceUrl) {
@@ -189,12 +196,12 @@ export async function syncMastodonNotifications() {
             accessToken: user.mastodonAccessToken,
         });
 
-        const syncService = createSyncService(mastodonClient, session.user.id);
+        const syncService = createSyncService(mastodonClient, session.user!.id);
 
         // Sync notifications
         await syncService.syncNotifications(50);
 
-        revalidatePath('/');
+        revalidatePath('/notifications');
         return { success: true };
     } catch (error) {
         console.error('Error syncing Mastodon notifications:', error);
@@ -220,7 +227,7 @@ export async function createNotification(data: {
             read: false,
         });
 
-        revalidatePath('/');
+        revalidatePath('/notifications');
         return { success: true };
     } catch (error) {
         console.error('Error creating notification:', error);

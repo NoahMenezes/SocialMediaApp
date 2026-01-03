@@ -1,47 +1,13 @@
 import { AppLayout } from "@/components/app-layout";
 import { getCurrentUser } from "@/backend/actions/auth";
+import { getNotifications } from "@/backend/actions/notifications";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, UserPlus, MessageCircle } from "lucide-react";
+import { Heart, UserPlus, MessageCircle, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default async function NotificationsPage() {
   const user = await getCurrentUser();
-
-  const notifications = [
-    {
-      id: 1,
-      type: "like",
-      actor: {
-        name: "Kritika",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Kritika",
-      },
-      content: "liked your post",
-      time: "2m",
-      read: false,
-    },
-    {
-      id: 2,
-      type: "follow",
-      actor: {
-        name: "Aditii",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=aditii",
-      },
-      content: "followed you",
-      time: "1h",
-      read: true,
-    },
-    {
-      id: 3,
-      type: "reply",
-      actor: {
-        name: "NZ",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=NZ",
-      },
-      content: "replied: 'Totally agree!'",
-      time: "3h",
-      read: true,
-    },
-  ];
+  const notifications = await getNotifications();
 
   return (
     <AppLayout user={user}>
@@ -68,18 +34,27 @@ export default async function NotificationsPage() {
                   <AvatarImage src={notification.actor.avatar} />
                   <AvatarFallback>{notification.actor.name[0]}</AvatarFallback>
                 </Avatar>
-                <p className="text-sm font-bold hover:underline">{notification.actor.name}</p>
-                <p className="text-sm text-muted-foreground">{notification.content}</p>
+                <div className="flex flex-col">
+                    <p className="text-sm">
+                        <span className="font-bold hover:underline cursor-pointer">{notification.actor.name}</span>
+                        {" "}
+                        <span className="text-muted-foreground">{notification.content}</span>
+                    </p>
+                    <p className="text-xs text-muted-foreground">{notification.time}</p>
+                </div>
               </div>
-              {notification.type === "reply" && (
-                <p className="text-muted-foreground text-sm mt-1">{notification.content}</p>
-              )}
             </div>
           </div>
         ))}
         {notifications.length === 0 && (
-            <div className="p-8 text-center text-muted-foreground">
-                No notifications yet.
+            <div className="p-20 text-center text-muted-foreground flex flex-col items-center gap-4">
+                <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center">
+                    <Sparkles className="w-8 h-8 text-muted-foreground/30" />
+                </div>
+                <div className="space-y-1">
+                    <h3 className="text-xl font-bold text-foreground">No notifications yet</h3>
+                    <p className="text-sm max-w-[200px] mx-auto">When people like your posts or follow you, you'll see it here.</p>
+                </div>
             </div>
         )}
       </div>

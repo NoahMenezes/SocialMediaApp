@@ -15,7 +15,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
   const params = await searchParams;
   const q = params.q;
 
-  let foundUsers;
+  let foundUsers: any[] = [];
   
   if (q) {
       foundUsers = await db.select().from(users).where(
@@ -24,8 +24,6 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
               like(users.username, `%${q}%`)
           )
       ).limit(20);
-  } else {
-      foundUsers = await db.select().from(users).limit(10).orderBy(desc(users.createdAt));
   }
 
   return (

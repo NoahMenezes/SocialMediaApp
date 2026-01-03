@@ -2,7 +2,7 @@
 
 import { db } from "@/backend/db";
 import { likes, comments, reposts, notifications, posts } from "@/backend/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { getCurrentUser } from "./auth";
 import { revalidatePath } from "next/cache";
 
@@ -18,11 +18,21 @@ export async function toggleLike(postId: string) {
 
     if (existingLike) {
         await db.delete(likes).where(and(eq(likes.userId, user.id), eq(likes.postId, postId)));
+
+        // Decrement likesCount
+        await db.update(posts)
+            .set({ likesCount: sql<number>`${posts.likesCount} - 1` })
+            .where(eq(posts.id, postId));
     } else {
         await db.insert(likes).values({
             userId: user.id,
             postId: postId,
         });
+
+        // Increment likesCount
+        await db.update(posts)
+            .set({ likesCount: sql<number>`${posts.likesCount} + 1` })
+            .where(eq(posts.id, postId));
 
         // Add notification for the post owner
         const post = await db.query.posts.findFirst({
@@ -55,6 +65,11 @@ export async function addComment(postId: string, content: string) {
         content: content,
     }).returning();
 
+    // Increment repliesCount
+    await db.update(posts)
+        .set({ repliesCount: sql<number>`${posts.repliesCount} + 1` })
+        .where(eq(posts.id, postId));
+
     // Add notification
     const post = await db.query.posts.findFirst({
         where: eq(posts.id, postId),
@@ -85,11 +100,21 @@ export async function toggleRepost(postId: string) {
 
     if (existingRepost) {
         await db.delete(reposts).where(and(eq(reposts.userId, user.id), eq(reposts.postId, postId)));
+
+        // Decrement reblogsCount
+        await db.update(posts)
+            .set({ reblogsCount: sql<number>`${posts.reblogsCount} - 1` })
+            .where(eq(posts.id, postId));
     } else {
         await db.insert(reposts).values({
             userId: user.id,
             postId: postId,
         });
+
+        // Increment reblogsCount
+        await db.update(posts)
+            .set({ reblogsCount: sql<number>`${posts.reblogsCount} + 1` })
+            .where(eq(posts.id, postId));
     }
 
     revalidatePath("/");
