@@ -63,6 +63,7 @@ export const verificationTokens = sqliteTable('verification_tokens', {
     }),
 }));
 
+
 // --- Social Features (From existing DB) ---
 
 export const posts = sqliteTable("posts", {
@@ -252,10 +253,12 @@ export const messages = sqliteTable('messages', {
 });
 
 // Exports
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Post = typeof posts.$inferSelect;
 export type NewPost = typeof posts.$inferInsert;
+
 export type Comment = typeof comments.$inferSelect;
 export type NewComment = typeof comments.$inferInsert;
 export type Like = typeof likes.$inferSelect;
@@ -280,3 +283,4 @@ export type Block = typeof blocks.$inferSelect;
 export type NewBlock = typeof blocks.$inferInsert;
 export type Mute = typeof mutes.$inferSelect;
 export type NewMute = typeof mutes.$inferInsert;
+

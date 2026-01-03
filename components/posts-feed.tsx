@@ -1,15 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Sidebar } from "./sidebar"
-import { Search, Heart, MessageCircle, Repeat2, Share, MoreHorizontal, Image as ImageIcon, Smile, Calendar } from "lucide-react"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
+
+import { PostCard } from "@/components/post-card"
+import { Image as ImageIcon, Smile, Calendar, Sparkles } from "lucide-react"
+import { FadeIn } from "@/components/ui/fade-in"
+import { AnimatePresence, motion } from "framer-motion"
+import { createPost } from "@/backend/actions/posts"
 
 interface Post {
   id: string
@@ -24,297 +25,145 @@ interface Post {
   likes: number
   comments: number
   reposts: number
-  image?: string
+  image?: string | null
 }
 
-const samplePosts: Post[] = [
-  {
-    id: "1",
-    author: {
-      name: "Kritika",
-      username: "KritikaSaini23",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Kritika",
-      verified: true,
-    },
-    content: "A person who knows HTML, CSS, and JS is a developer?",
-    timestamp: "3h",
-    likes: 74,
-    comments: 101,
-    reposts: 3,
-  },
-  {
-    id: "2",
-    author: {
-      name: "aditii",
-      username: "aditiiwt",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=aditii",
-      verified: true,
-    },
-    content: "is your profile picture actually you?",
-    timestamp: "Jan 1",
-    likes: 150,
-    comments: 203,
-    reposts: 1,
-  },
-  {
-    id: "3",
-    author: {
-      name: "NZ",
-      username: "CodeByNZ",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=NZ",
-      verified: true,
-    },
-    content: "if we don't stop VIBE CODERS !!!......",
-    timestamp: "2h",
-    likes: 0,
-    comments: 0,
-    reposts: 0,
-  },
-]
-
-export function PostsFeed({ user }: { user?: { name: string; email: string } | null }) {
-  const [posts, setPosts] = useState(samplePosts)
+export function PostsFeed({ 
+  user, 
+  initialPosts = [] 
+}: { 
+  user?: { id: string; name: string; email: string } | null;
+  initialPosts?: Post[];
+}) {
+  const [posts, setPosts] = useState<Post[]>(initialPosts)
   const [newPost, setNewPost] = useState("")
+  const [activeTab, setActiveTab] = useState("for-you")
+  const [isPosting, setIsPosting] = useState(false)
 
-  const handleCreatePost = () => {
-    if (newPost.trim() && user) {
-      const post: Post = {
-        id: (posts.length + 1).toString(),
-        author: {
-          name: user.name,
-          username: user.name.replace(/\s+/g, ''),
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`,
-          verified: false,
-        },
-        content: newPost,
-        timestamp: "now",
-        likes: 0,
-        comments: 0,
-        reposts: 0,
+  // Synchronize with initialPosts from server
+  useEffect(() => {
+    setPosts(initialPosts)
+  }, [initialPosts])
+
+  const handleCreatePost = async () => {
+    if (newPost.trim() && user && !isPosting) {
+      setIsPosting(true)
+      try {
+        const created = await createPost(newPost)
+        
+        const optimisticPost: Post = {
+          id: created.id,
+          author: {
+            name: user.name,
+            username: user.name.replace(/\s+/g, ''),
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`,
+            verified: false,
+          },
+          content: newPost,
+          timestamp: "now",
+          likes: 0,
+          comments: 0,
+          reposts: 0,
+        }
+        
+        setPosts([optimisticPost, ...posts])
+        setNewPost("")
+      } catch (error) {
+        console.error("Failed to create post", error)
+      } finally {
+        setIsPosting(false)
       }
-      setPosts([post, ...posts])
-      setNewPost("")
     }
   }
 
   return (
-    <div className="flex h-screen bg-background justify-center">
-      <div className="flex w-full max-w-[1600px]">
-        <Sidebar user={user} />
-
-        <div className="flex flex-1 gap-0">
-        {/* Main Feed */}
-        <div className="flex-1 border-r border-border flex flex-col max-w-2xl">
-          {/* Header with Tabs */}
-          <div className="border-b border-border sticky top-0 bg-background/95 backdrop-blur-sm z-10">
-            <div className="p-4 pb-0">
-              <h2 className="text-xl font-bold text-foreground mb-4">Home</h2>
-            </div>
-            <Tabs defaultValue="for-you" className="w-full">
-              <TabsList className="w-full rounded-none bg-transparent border-b-0 h-auto p-0">
-                <TabsTrigger 
-                  value="for-you" 
-                  className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-4"
-                >
-                  For you
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="following" 
-                  className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent py-4"
-                >
-                  Following
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-
-          {/* Create Post */}
-          {user && (
-            <div className="border-b border-border p-4">
-              <div className="flex gap-3">
-                <Avatar className="h-10 w-10 flex-shrink-0">
-                  <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} />
-                  <AvatarFallback>{user.name[0]}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <textarea
-                    placeholder="What's happening?"
-                    value={newPost}
-                    onChange={(e) => setNewPost(e.target.value)}
-                    className="w-full bg-transparent text-foreground placeholder:text-muted-foreground text-lg resize-none outline-none min-h-[80px]"
-                  />
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
-                    <div className="flex gap-2">
-                      <button className="p-2 rounded-full hover:bg-primary/10 text-primary transition-colors">
-                        <ImageIcon className="w-5 h-5" />
-                      </button>
-                      <button className="p-2 rounded-full hover:bg-primary/10 text-primary transition-colors">
-                        <Smile className="w-5 h-5" />
-                      </button>
-                      <button className="p-2 rounded-full hover:bg-primary/10 text-primary transition-colors">
-                        <Calendar className="w-5 h-5" />
-                      </button>
-                    </div>
-                    <Button
-                      onClick={handleCreatePost}
-                      disabled={!newPost.trim()}
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-6 font-bold"
-                    >
-                      Post
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Posts */}
-          <div className="flex-1 overflow-y-auto">
-            {posts.map((post) => (
-              <article key={post.id} className="border-b border-border p-4 hover:bg-muted/20 transition-colors cursor-pointer">
-                <div className="flex gap-3">
-                  <Avatar className="h-10 w-10 flex-shrink-0">
-                    <AvatarImage src={post.author.avatar} />
-                    <AvatarFallback>{post.author.name[0]}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-bold text-foreground hover:underline">{post.author.name}</span>
-                      {post.author.verified && (
-                        <svg className="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.818-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.437 2.25c-.415-.165-.866-.25-1.336-.25-2.11 0-3.818 1.79-3.818 4 0 .494.083.964.237 1.4-1.272.65-2.147 2.018-2.147 3.6 0 1.495.782 2.798 1.942 3.486-.02.17-.032.34-.032.514 0 2.21 1.708 4 3.818 4 .47 0 .92-.086 1.335-.25.62 1.334 1.926 2.25 3.437 2.25 1.512 0 2.818-.916 3.437-2.25.415.163.865.248 1.336.248 2.11 0 3.818-1.79 3.818-4 0-.174-.012-.344-.033-.513 1.158-.687 1.943-1.99 1.943-3.484zm-6.616-3.334l-4.334 6.5c-.145.217-.382.334-.625.334-.143 0-.288-.04-.416-.126l-.115-.094-2.415-2.415c-.293-.293-.293-.768 0-1.06s.768-.294 1.06 0l1.77 1.767 3.825-5.74c.23-.345.696-.436 1.04-.207.346.23.44.696.21 1.04z" />
-                        </svg>
-                      )}
-                      <span className="text-muted-foreground">@{post.author.username}</span>
-                      <span className="text-muted-foreground">·</span>
-                      <span className="text-muted-foreground">{post.timestamp}</span>
-                      <button className="ml-auto p-1 rounded-full hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors">
-                        <MoreHorizontal className="w-5 h-5" />
-                      </button>
-                    </div>
-                    <p className="text-foreground mb-3 whitespace-pre-wrap">{post.content}</p>
-                    {post.image && (
-                      <img src={post.image} alt="Post content" className="rounded-2xl w-full mb-3" />
-                    )}
-                    <div className="flex items-center justify-between max-w-md mt-2">
-                      <button className="flex items-center gap-2 group">
-                        <div className="p-2 rounded-full group-hover:bg-primary/10 transition-colors">
-                          <MessageCircle className="w-5 h-5 text-muted-foreground group-hover:text-primary" />
-                        </div>
-                        <span className="text-sm text-muted-foreground group-hover:text-primary">{post.comments}</span>
-                      </button>
-                      <button className="flex items-center gap-2 group">
-                        <div className="p-2 rounded-full group-hover:bg-green-500/10 transition-colors">
-                          <Repeat2 className="w-5 h-5 text-muted-foreground group-hover:text-green-500" />
-                        </div>
-                        <span className="text-sm text-muted-foreground group-hover:text-green-500">{post.reposts}</span>
-                      </button>
-                      <button className="flex items-center gap-2 group">
-                        <div className="p-2 rounded-full group-hover:bg-red-500/10 transition-colors">
-                          <Heart className="w-5 h-5 text-muted-foreground group-hover:text-red-500" />
-                        </div>
-                        <span className="text-sm text-muted-foreground group-hover:text-red-500">{post.likes}</span>
-                      </button>
-                      <button className="group">
-                        <div className="p-2 rounded-full group-hover:bg-primary/10 transition-colors">
-                          <Share className="w-5 h-5 text-muted-foreground group-hover:text-primary" />
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
+    <>
+      {/* Header */}
+      <div className="sticky top-0 bg-background/80 backdrop-blur-md z-30 border-b border-border/40">
+        <div className="px-4 py-3 flex items-center justify-between">
+          <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">Home</h2>
+          <Sparkles className="w-5 h-5 text-primary" />
         </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full grid grid-cols-2 rounded-none bg-transparent h-auto p-0">
+            {["For you", "Following"].map((tab) => {
+              const isActive = activeTab === tab.toLowerCase().replace(" ", "-")
+              return (
+                <TabsTrigger 
+                  key={tab}
+                  value={tab.toLowerCase().replace(" ", "-")} 
+                  className="relative rounded-none border-b-0 text-muted-foreground data-[state=active]:text-foreground py-4 transition-colors hover:bg-muted/10 font-bold"
+                >
+                  <span className="relative z-10">{tab}</span>
+                  {isActive && (
+                    <motion.div 
+                      layoutId="activeTabMobile"
+                      className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-1 bg-primary rounded-t-full"
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    />
+                  )}
+                </TabsTrigger>
+              )
+            })}
+          </TabsList>
+        </Tabs>
+      </div>
 
-        {/* Right Sidebar - Search and Trends */}
-        <ScrollArea className="w-80 h-screen">
-          <div className="p-4 space-y-4">
-            {/* Search */}
-            <div className="sticky top-0 bg-background pb-4 z-10">
+      {/* Create Post Card */}
+      {user && (
+        <div className="p-4 border-b border-border/40">
+          <div className="flex gap-4">
+            <Avatar className="h-12 w-12 border-2 border-background shadow-sm hover:scale-105 transition-transform cursor-pointer">
+              <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} />
+              <AvatarFallback>{user.name[0]}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 space-y-4">
               <div className="relative">
-                <Search className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
-                <Input
-                  placeholder="Search"
-                  className="pl-10 bg-muted/30 border-0 rounded-full text-foreground placeholder:text-muted-foreground focus:bg-muted/50"
+                <Textarea
+                  id="post-input"
+                  placeholder="What is happening?!"
+                  value={newPost}
+                  onChange={(e) => setNewPost(e.target.value)}
+                  className="w-full bg-transparent text-xl font-medium placeholder:text-muted-foreground/50 resize-none outline-none min-h-[50px] py-2 border-none focus-visible:ring-0 shadow-none"
+                  rows={2}
                 />
               </div>
-            </div>
 
-            {/* Subscribe to Premium */}
-            <Card className="border-border">
-              <CardHeader>
-                <CardTitle className="text-xl">Subscribe to Premium</CardTitle>
-                <CardDescription>
-                  Subscribe to unlock new features and if eligible, receive a share of revenue.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-full font-bold">
-                  Subscribe
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Today's News */}
-            <Card className="border-border">
-              <CardHeader>
-                <CardTitle className="text-xl">Today's News</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {[
-                  {
-                    category: "Other",
-                    title: "Rajinikanth's Thalaivar 173 Teases Big Update Tomorrow",
-                    posts: "14K posts",
-                  },
-                  {
-                    category: "Other",
-                    title: "Bigg Boss Tamil Season 9 Erupts in Heated Car Task Clash",
-                    posts: "3,402 posts",
-                  },
-                  {
-                    category: "Other",
-                    title: "Grok AI Faces Backlash for Generating Non-Consensual Explicit Images",
-                    posts: "222.9K posts",
-                  },
-                ].map((news, index) => (
-                  <div key={index} className="group cursor-pointer hover:bg-muted/50 p-2 rounded-lg transition-colors">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="text-xs text-muted-foreground">{news.category} · {news.posts}</p>
-                        <p className="text-sm font-semibold text-foreground group-hover:underline mt-1">
-                          {news.title}
-                        </p>
-                      </div>
-                      <button className="p-1 rounded-full hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            {/* What's happening */}
-            <Card className="border-border">
-              <CardHeader>
-                <CardTitle className="text-xl">What's happening</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="group cursor-pointer hover:bg-muted/50 p-2 rounded-lg transition-colors">
-                  <p className="text-sm font-semibold text-foreground group-hover:underline">
-                    Latest tech trends and updates
-                  </p>
-                  <Badge variant="secondary" className="mt-2">Trending now</Badge>
+              <div className="flex items-center justify-between pt-2 border-t border-border/40">
+                <div className="flex gap-1 -ml-2">
+                  {[ImageIcon, Smile, Calendar].map((Icon, i) => (
+                    <motion.button 
+                      key={i} 
+                      whileHover={{ scale: 1.1, backgroundColor: "rgba(var(--primary), 0.1)" }}
+                      whileTap={{ scale: 0.9 }}
+                      className="p-2 rounded-full text-primary transition-colors hover:bg-primary/10"
+                    >
+                      <Icon className="w-5 h-5" />
+                    </motion.button>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
+                <Button
+                  onClick={handleCreatePost}
+                  disabled={!newPost.trim() || isPosting}
+                  className="rounded-full px-6 font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 disabled:opacity-50 transition-all active:scale-95"
+                >
+                  {isPosting ? "Posting..." : "Post"}
+                </Button>
+              </div>
+            </div>
           </div>
-        </ScrollArea>
         </div>
+      )}
+
+      {/* Posts List */}
+      <div className="divide-y divide-border/40 pb-20">
+        <AnimatePresence mode="popLayout">
+          {posts.map((post, index) => (
+            <PostCard key={post.id} post={post as any} index={index} />
+          ))}
+        </AnimatePresence>
       </div>
-    </div>
+    </>
   )
 }
+

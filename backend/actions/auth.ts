@@ -63,11 +63,14 @@ export async function signup(formData: FormData) {
     const [newUser] = await db
       .insert(users)
       .values({
+        id: crypto.randomUUID(),
         name,
         email,
         password: hashedPassword,
+        username: name.toLowerCase().replace(/\s+/g, '') + Math.floor(Math.random() * 1000),
         emailVerified: new Date(), // Auto-verify for now, or implement email verification
       })
+
       .returning();
 
     return {

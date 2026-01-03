@@ -1,47 +1,31 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { auth } from "@/auth.config"
+import { NextResponse } from "next/server"
 
-// Define public routes that don't require authentication
-const publicRoutes = ['/login', '/signup']
+export default auth((req) => {
+    const isLoggedIn = !!req.auth
+    const isAuthPage = req.nextUrl.pathname.startsWith("/login") || req.nextUrl.pathname.startsWith("/signup")
 
-// Define routes that should redirect to home if user is already authenticated
-const authRoutes = ['/login', '/signup']
-
-export function middleware(request: NextRequest) {
-    const { pathname } = request.nextUrl
-    const userId = request.cookies.get('userId')?.value
-    const isAuthenticated = !!userId
-
-    // Check if the current route is public
-    const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
-
-    // Check if the current route is an auth route (login/signup)
-    const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))
-
-    // If user is authenticated and trying to access auth routes, redirect to home
-    if (isAuthenticated && isAuthRoute) {
-        return NextResponse.redirect(new URL('/', request.url))
+    if (isAuthPage) {
+        if (isLoggedIn) {
+            return NextResponse.redirect(new URL("/", req.nextUrl))
+        }
+        return NextResponse.next()
     }
 
-    // If user is not authenticated and trying to access protected routes, redirect to login
-    if (!isAuthenticated && !isPublicRoute) {
-        const loginUrl = new URL('/login', request.url)
-        // Add the original URL as a callback parameter
-        loginUrl.searchParams.set('callbackUrl', pathname)
-        return NextResponse.redirect(loginUrl)
+    if (!isLoggedIn) {
+        let callbackUrl = req.nextUrl.pathname
+        if (req.nextUrl.search) {
+            callbackUrl += req.nextUrl.search
+        }
+
+        const encodedCallbackUrl = encodeURIComponent(callbackUrl)
+        return NextResponse.redirect(new URL(`/login?callbackUrl=${encodedCallbackUrl}`, req.nextUrl))
     }
 
-    // Allow the request to proceed
     return NextResponse.next()
+})
+
+export const config = {
+    matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 }
 
-// Configure which routes the middleware should run on
-export const config = {
-    // Match all routes except:
-    // - api routes
-    // - _next/static (static files)
-    // - _next/image (image optimization files)
-    // - favicon.ico (favicon file)
-    // - public files (images, etc.)
-    matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
-}

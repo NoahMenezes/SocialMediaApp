@@ -1,20 +1,58 @@
+import { AppLayout } from "@/components/app-layout";
 import { getCurrentUser } from "@/backend/actions/auth";
-import { Sidebar } from "@/components/sidebar";
+import { PostCard } from "@/components/post-card";
+
+const bookmarkedPosts = [
+  {
+    id: "b1",
+    author: {
+      name: "Next.js",
+      username: "nextjs",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=nextjs",
+      verified: true,
+    },
+    content: "Next.js 15 is now available! 🚀\n\n- React 19 Support\n- Turbopack (stable)\n- Server Actions (stable)\n- Partial Prerendering (preview)",
+    timestamp: "Oct 26, 2024",
+    likes: 12000,
+    comments: 450,
+    reposts: 3200,
+  },
+  {
+    id: "b2",
+    author: {
+      name: "Vercel",
+      username: "vercel",
+      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=vercel",
+      verified: true,
+    },
+    content: "Deploy your Next.js app in seconds. #ShipIt",
+    timestamp: "Nov 1, 2024",
+    likes: 8500,
+    comments: 210,
+    reposts: 1100,
+  }
+];
 
 export default async function BookmarksPage() {
   const user = await getCurrentUser();
-  
+
   return (
-    <div className="flex h-screen bg-background justify-center">
-      <div className="flex w-full max-w-[1600px]">
-        <Sidebar user={user} />
-        <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-foreground mb-4">Bookmarks</h1>
-          <p className="text-muted-foreground">Coming soon...</p>
-        </div>
-        </div>
-      </div>
-    </div>
-  );
+    <AppLayout user={user}>
+       <div className="sticky top-0 bg-background/80 backdrop-blur-md z-30 border-b border-border/40 p-4">
+          <h2 className="text-xl font-bold">Bookmarks</h2>
+          <p className="text-sm text-muted-foreground">@{(user?.name || "").replace(/\s+/g, '')}</p>
+       </div>
+       
+       <div className="divide-y divide-border/40 pb-20">
+            {bookmarkedPosts.map((post, i) => (
+                <PostCard key={post.id} post={post} index={i} />
+            ))}
+            {bookmarkedPosts.length === 0 && (
+                <div className="p-8 text-center text-muted-foreground">
+                    No bookmarks yet.
+                </div>
+            )}
+       </div>
+    </AppLayout>
+  )
 }
