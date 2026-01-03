@@ -28,7 +28,7 @@ export async function getNotifications(limit: number = 50, offset: number = 0) {
         })
             .from(notifications)
             .innerJoin(users, eq(notifications.senderId, users.id))
-            .where(eq(notifications.recipientId, session.user.id))
+            .where(eq(notifications.recipientId, session.user!.id))
             .orderBy(desc(notifications.createdAt))
             .limit(limit)
             .offset(offset);
@@ -62,7 +62,7 @@ export async function getUnreadNotificationCount() {
 
         const unreadNotifications = await db.query.notifications.findMany({
             where: and(
-                eq(notifications.recipientId, session.user.id),
+                eq(notifications.recipientId, session.user!.id),
                 eq(notifications.read, false)
             ),
         });
@@ -93,7 +93,7 @@ export async function markNotificationAsRead(notificationId: string) {
             return { error: 'Notification not found' };
         }
 
-        if (notification.recipientId !== session.user.id) {
+        if (notification.recipientId !== session.user!.id) {
             return { error: 'Unauthorized' };
         }
 
@@ -124,7 +124,7 @@ export async function markAllNotificationsAsRead() {
             .set({ read: true })
             .where(
                 and(
-                    eq(notifications.recipientId, session.user.id),
+                    eq(notifications.recipientId, session.user!.id),
                     eq(notifications.read, false)
                 )
             );
@@ -156,7 +156,7 @@ export async function deleteNotification(notificationId: string) {
             return { error: 'Notification not found' };
         }
 
-        if (notification.recipientId !== session.user.id) {
+        if (notification.recipientId !== session.user!.id) {
             return { error: 'Unauthorized' };
         }
 
@@ -183,7 +183,7 @@ export async function syncMastodonNotifications() {
 
         // Get user's Mastodon credentials
         const user = await db.query.users.findFirst({
-            where: eq(users.id, session.user.id),
+            where: eq(users.id, session.user!.id),
         });
 
         if (!user?.mastodonAccessToken || !user?.mastodonInstanceUrl) {
@@ -196,7 +196,7 @@ export async function syncMastodonNotifications() {
             accessToken: user.mastodonAccessToken,
         });
 
-        const syncService = createSyncService(mastodonClient, session.user.id);
+        const syncService = createSyncService(mastodonClient, session.user!.id);
 
         // Sync notifications
         await syncService.syncNotifications(50);

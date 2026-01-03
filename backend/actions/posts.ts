@@ -27,9 +27,9 @@ export async function createPost(content: string) {
     }
 }
 
-export async function getPosts() {
+export async function getPosts(userId?: string) {
     try {
-        const result = await db.select({
+        let query = db.select({
             id: posts.id,
             content: posts.content,
             createdAt: posts.createdAt,
@@ -38,6 +38,7 @@ export async function getPosts() {
             repliesCount: posts.repliesCount,
             image: posts.image,
             author: {
+                id: users.id,
                 name: users.name,
                 username: users.username,
                 image: users.image,
@@ -45,7 +46,14 @@ export async function getPosts() {
         })
             .from(posts)
             .innerJoin(users, eq(posts.userId, users.id))
-            .orderBy(desc(posts.createdAt))
+            .orderBy(desc(posts.createdAt));
+
+        if (userId) {
+            // @ts-ignore
+            query = query.where(eq(posts.userId, userId));
+        }
+
+        const result = await query;
 
         return result.map(post => ({
             id: post.id,
