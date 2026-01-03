@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Sidebar } from "./sidebar"
 import { RightSidebar } from "./right-sidebar"
+import { PostCard } from "@/components/post-card"
 import { Heart, MessageCircle, Repeat2, Share, MoreHorizontal, Image as ImageIcon, Smile, Calendar, Sparkles } from "lucide-react"
 import { FadeIn } from "@/components/ui/fade-in"
 import { AnimatePresence, motion } from "motion/react"
@@ -115,15 +116,25 @@ export function PostsFeed({ user }: { user?: { name: string; email: string } | n
              </div>
              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="w-full grid grid-cols-2 rounded-none bg-transparent h-auto p-0">
-                {["For you", "Following"].map((tab) => (
-                  <TabsTrigger 
-                    key={tab}
-                    value={tab.toLowerCase().replace(" ", "-")} 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-foreground text-muted-foreground py-4 transition-all hover:bg-muted/10"
-                  >
-                    {tab}
-                  </TabsTrigger>
-                ))}
+                {["For you", "Following"].map((tab) => {
+                  const isActive = activeTab === tab.toLowerCase().replace(" ", "-")
+                  return (
+                    <TabsTrigger 
+                      key={tab}
+                      value={tab.toLowerCase().replace(" ", "-")} 
+                      className="relative rounded-none border-b-0 text-muted-foreground data-[state=active]:text-foreground py-4 transition-colors hover:bg-muted/10"
+                    >
+                      <span className="relative z-10">{tab}</span>
+                      {isActive && (
+                        <motion.div 
+                          layoutId="activeTab"
+                          className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full"
+                          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                        />
+                      )}
+                    </TabsTrigger>
+                  )
+                })}
               </TabsList>
             </Tabs>
           </div>
@@ -150,9 +161,14 @@ export function PostsFeed({ user }: { user?: { name: string; email: string } | n
                    <div className="flex items-center justify-between pt-2 border-t border-border/40">
                       <div className="flex gap-1 -ml-2">
                         {[ImageIcon,  Smile, Calendar].map((Icon, i) => (
-                          <button key={i} className="p-2 rounded-full hover:bg-primary/10 text-primary transition-colors">
+                          <motion.button 
+                             key={i} 
+                             whileHover={{ scale: 1.1, backgroundColor: "rgba(var(--primary), 0.1)" }}
+                             whileTap={{ scale: 0.9 }}
+                             className="p-2 rounded-full text-primary transition-colors"
+                          >
                             <Icon className="w-5 h-5" />
-                          </button>
+                          </motion.button>
                         ))}
                       </div>
                       <Button
@@ -169,61 +185,10 @@ export function PostsFeed({ user }: { user?: { name: string; email: string } | n
           )}
 
           {/* Posts List */}
-          <div className="divide-y divide-border/40">
+          <div className="divide-y divide-border/40 pb-20">
             <AnimatePresence mode="popLayout">
               {posts.map((post, index) => (
-                <motion.article 
-                  key={post.id}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                  className="p-4 hover:bg-muted/5 transition-colors cursor-pointer group"
-                >
-                  <div className="flex gap-4">
-                    <Avatar className="h-10 w-10 flex-shrink-0 hover:ring-2 hover:ring-primary/20 transition-all cursor-pointer">
-                      <AvatarImage src={post.author.avatar} />
-                      <AvatarFallback>{post.author.name[0]}</AvatarFallback>
-                    </Avatar>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-bold text-foreground hover:underline cursor-pointer">{post.author.name}</span>
-                          {post.author.verified && (
-                             <div className="bg-primary text-white rounded-full p-[1px]">
-                                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                             </div>
-                          )}
-                          <span className="text-muted-foreground text-sm">@{post.author.username}</span>
-                          <span className="text-muted-foreground text-sm">·</span>
-                          <span className="text-muted-foreground text-sm hover:underline hover:text-primary transition-colors">{post.timestamp}</span>
-                        </div>
-                        <button className="p-2 -mr-2 rounded-full hover:bg-primary/10 hover:text-primary text-muted-foreground transition-colors">
-                          <MoreHorizontal className="w-5 h-5" />
-                        </button>
-                      </div>
-
-                      <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed text-[17px] mb-3">
-                        {post.content}
-                      </p>
-
-                      {post.image && (
-                         <div className="mb-3 rounded-2xl overflow-hidden border border-border/50 bg-muted/20">
-                            <img src={post.image} alt="Post content" className="w-full hover:scale-105 transition-transform duration-500" />
-                         </div>
-                      )}
-
-                      <div className="flex items-center justify-between max-w-md pt-1 -ml-2">
-                        <ActionButton icon={MessageCircle} count={post.comments} color="blue" />
-                        <ActionButton icon={Repeat2} count={post.reposts} color="green" />
-                        <ActionButton icon={Heart} count={post.likes} color="red" />
-                        <ActionButton icon={Share} color="blue" />
-                      </div>
-                    </div>
-                  </div>
-                </motion.article>
+                <PostCard key={post.id} post={post} index={index} />
               ))}
             </AnimatePresence>
           </div>
@@ -235,27 +200,4 @@ export function PostsFeed({ user }: { user?: { name: string; email: string } | n
       </div>
     </div>
   )
-}
-
-function ActionButton({ icon: Icon, count, color }: { icon: any, count?: number, color?: "blue" | "green" | "red" }) {
-    const colorClasses = {
-        blue: "group-hover:text-sky-500 group-hover:bg-sky-500/10",
-        green: "group-hover:text-emerald-500 group-hover:bg-emerald-500/10",
-        red: "group-hover:text-rose-500 group-hover:bg-rose-500/10",
-    }
-    const colorClass = color ? colorClasses[color] : "group-hover:text-sky-500 group-hover:bg-sky-500/10"
-    const textColorClass = color ? colorClass.split(" ")[0] : "group-hover:text-sky-500"
-
-    return (
-        <button className="flex items-center gap-1.5 group transition-all text-muted-foreground">
-            <div className={`p-2 rounded-full transition-colors ${colorClass}`}>
-                <Icon className="w-5 h-5" />
-            </div>
-            {count !== undefined && (
-                <span className={`text-sm transition-colors ${textColorClass}`}>
-                    {count > 0 ? count : ""}
-                </span>
-            )}
-        </button>
-    )
 }
