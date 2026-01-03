@@ -8,7 +8,7 @@ import { users, accounts } from "@/backend/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
-export const authOptions: NextAuthConfig = {
+export const authOptions = {
     providers: [
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -71,7 +71,7 @@ export const authOptions: NextAuthConfig = {
         })
     ],
     callbacks: {
-        async signIn({ user, account, profile }) {
+        async signIn({ user, account, profile }: any) {
             // Handle Google sign-in
             if (account?.provider === "google") {
                 try {
@@ -141,7 +141,7 @@ export const authOptions: NextAuthConfig = {
 
             return true;
         },
-        async jwt({ token, user, account }) {
+        async jwt({ token, user, account }: any) {
             if (user) {
                 token.id = user.id;
                 token.email = user.email;
@@ -149,8 +149,9 @@ export const authOptions: NextAuthConfig = {
             }
             return token;
         },
-        async session({ session, token }) {
+        async session({ session, token }: any) {
             if (session.user) {
+                // @ts-ignore
                 session.user.id = token.id as string;
                 session.user.email = token.email as string;
                 session.user.name = token.name as string;
@@ -163,7 +164,7 @@ export const authOptions: NextAuthConfig = {
         error: "/signin",
     },
     session: {
-        strategy: "jwt",
+        strategy: "jwt" as const,
     },
     secret: process.env.NEXTAUTH_SECRET,
 };
