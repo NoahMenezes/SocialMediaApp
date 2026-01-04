@@ -15,7 +15,7 @@ const MOCK_STORIES = [
     { id: "7", username: "Steven Tey", avatar: "https://github.com/steventey.png", viewed: false },
 ]
 
-export function Stories({ user }: { user?: { name: string; email: string; image?: string | null } | null }) {
+export function Stories({ user }: { user?: { name?: string | null; email?: string | null; image?: string | null } | null }) {
     return (
         <div className="flex gap-4 px-4 overflow-x-auto no-scrollbar py-2">
             {/* Your Story */}

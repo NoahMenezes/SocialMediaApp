@@ -7,11 +7,11 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 
-export function Sidebar({ user }: { user?: { name: string; email: string; image?: string | null; username?: string | null } | null }) {
+export function Sidebar({ user }: { user?: { name?: string | null; email?: string | null; image?: string | null; username?: string | null } | null }) {
   const pathname = usePathname()
 
   const navItems = [
-    { icon: Home, label: "Home", href: "/" },
+    { icon: Home, label: "Home", href: "/dashboard" },
     { icon: Hash, label: "Explore", href: "/explore" },
     { icon: Bell, label: "Notifications", href: "/notifications" },
     { icon: Mail, label: "Messages", href: "/messages" },
@@ -23,7 +23,7 @@ export function Sidebar({ user }: { user?: { name: string; email: string; image?
     <aside className="fixed md:sticky top-0 left-0 h-screen w-20 xl:w-72 bg-black border-r border-white/5 flex flex-col py-4 select-none z-50 overflow-y-auto">
       {/* Logo */}
       <div className="px-4 mb-4 flex justify-center xl:justify-start">
-        <Link href="/" className="w-12 h-12 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors">
+        <Link href="/dashboard" className="w-12 h-12 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors">
           <Twitter className="w-8 h-8 text-white fill-current" />
         </Link>
       </div>

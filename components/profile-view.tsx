@@ -24,7 +24,7 @@ export function ProfileView({
     <AppLayout user={sessionUser}>
       {/* Header */}
       <div className="sticky top-0 bg-black/80 backdrop-blur-md z-30 border-b border-white/5 px-4 h-14 flex items-center gap-8">
-        <Link href="/">
+        <Link href="/dashboard">
           <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10 -ml-2 text-white">
             <ArrowLeft className="w-5 h-5" />
           </Button>

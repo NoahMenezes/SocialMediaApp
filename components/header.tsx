@@ -15,7 +15,7 @@ const menuItems = [
     { name: 'About', href: '#link' },
 ]
 
-export const HeroHeader = ({ user }: { user?: { name: string; email: string } | null }) => {
+export const HeroHeader = ({ user }: { user?: { name?: string | null; email?: string | null } | null }) => {
     const [menuState, setMenuState] = React.useState(false)
     const [scrolled, setScrolled] = React.useState(false)
 
@@ -87,7 +87,7 @@ export const HeroHeader = ({ user }: { user?: { name: string; email: string } | 
                                 </ul>
                             </div>
                             <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit">
-                                <ModeToggle/>
+                                <ModeToggle />
                                 {user ? (
                                     <>
                                         <div className="flex items-center text-sm font-medium">

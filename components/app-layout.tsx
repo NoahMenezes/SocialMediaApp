@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 interface AppLayoutProps {
   children: ReactNode;
-  user?: { name: string; email: string; image?: string | null } | null;
+  user?: { name?: string | null; email?: string | null; image?: string | null; username?: string | null } | null;
   className?: string; // For additional styling on main content
 }
 
@@ -27,7 +27,7 @@ export function AppLayout({ children, user, className }: AppLayoutProps) {
 
         {/* Main Content */}
         <main className={cn("flex-1 max-w-[700px] w-full border-x border-border/40 min-h-screen flex flex-col", className)}>
-            {children}
+          {children}
         </main>
 
         {/* Right Sidebar */}

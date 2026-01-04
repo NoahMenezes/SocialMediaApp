@@ -169,7 +169,7 @@ export async function login(formData: FormData) {
 
 export async function signInWithGoogle(formData?: FormData): Promise<void> {
   await nextAuthSignIn("google", {
-    redirectTo: "/", // Redirect to home page after successful login
+    redirectTo: "/dashboard", // Redirect to dashboard after successful login
   });
 }
 

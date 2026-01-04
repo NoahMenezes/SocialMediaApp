@@ -33,7 +33,7 @@ interface Conversation {
   } | null
 }
 
-export function MessageSection({ user: currentUser }: { user?: { id: string; name: string; email: string; image?: string | null; username?: string | null } | null }) {
+export function MessageSection({ user: currentUser }: { user?: { id?: string | null; name?: string | null; email?: string | null; image?: string | null; username?: string | null } | null }) {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null)
   const [inputValue, setInputValue] = useState("")

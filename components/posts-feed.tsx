@@ -31,7 +31,7 @@ export function PostsFeed({
   user,
   initialPosts = []
 }: {
-  user?: { id: string; name: string; email: string; image?: string | null; username?: string | null } | null;
+  user?: { id?: string | null; name?: string | null; email?: string | null; image?: string | null; username?: string | null } | null;
   initialPosts?: Post[];
 }) {
   const [posts, setPosts] = useState<Post[]>(initialPosts as any)
