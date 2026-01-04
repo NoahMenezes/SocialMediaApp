@@ -2,55 +2,74 @@
 
 import { db } from "@/backend/db";
 import { messages, users } from "@/backend/db/schema";
-import { eq, or, and, desc, sql } from "drizzle-orm";
+import { eq, or, and, desc, asc, like, isNull, sql } from "drizzle-orm";
 import { auth } from "@/auth.config";
 import { revalidatePath } from "next/cache";
 
 /**
- * Send a direct message to another user
+ * Send a message to another user
  */
 export async function sendMessage(receiverId: string, content: string) {
     try {
         const session = await auth();
         if (!session?.user?.id) {
-            return { error: 'Unauthorized' };
+            return { error: "Unauthorized" };
         }
 
-        const [newMessage] = await db.insert(messages).values({
-            senderId: session.user.id,
-            receiverId: receiverId,
-            content: content,
-            createdAt: new Date(),
-        }).returning();
+        const senderId = session.user.id;
 
-        revalidatePath('/messages');
+        if (!content.trim()) {
+            return { error: "Message content cannot be empty" };
+        }
+
+        if (senderId === receiverId) {
+            return { error: "Cannot send message to yourself" };
+        }
+
+        // Insert message
+        const [newMessage] = await db
+            .insert(messages)
+            .values({
+                senderId,
+                receiverId,
+                content: content.trim(),
+                createdAt: new Date(),
+            })
+            .returning();
+
+        // Revalidate relevant paths
+        revalidatePath(`/messages`);
+
         return { success: true, message: newMessage };
     } catch (error) {
-        console.error('Error sending message:', error);
-        return { error: 'Failed to send message' };
+        console.error("Error sending message:", error);
+        return { error: "Failed to send message" };
     }
 }
 
 /**
- * Get messages between current user and another user
+ * Get conversation history with a specific user
  */
 export async function getMessages(otherUserId: string) {
     try {
         const session = await auth();
         if (!session?.user?.id) return [];
 
+        const currentUserId = session.user.id;
+
+        // Fetch messages where (sender=me AND receiver=other) OR (sender=other AND receiver=me)
         const chatMessages = await db.query.messages.findMany({
             where: or(
                 and(
-                    eq(messages.senderId, session.user.id),
+                    eq(messages.senderId, currentUserId),
                     eq(messages.receiverId, otherUserId)
                 ),
                 and(
                     eq(messages.senderId, otherUserId),
-                    eq(messages.receiverId, session.user.id)
+                    eq(messages.receiverId, currentUserId)
                 )
             ),
-            orderBy: [messages.createdAt],
+            orderBy: [asc(messages.createdAt)],
         });
 
         return chatMessages.map(m => ({
@@ -58,52 +77,49 @@ export async function getMessages(otherUserId: string) {
             senderId: m.senderId,
             content: m.content,
             createdAt: m.createdAt,
-            isOwn: m.senderId === session?.user?.id,
+            isOwn: m.senderId === currentUserId,
         }));
     } catch (error) {
-        console.error('Error fetching messages:', error);
+        console.error("Error fetching messages:", error);
         return [];
     }
 }
 
 /**
  * Get all conversations for the current user
- * grouped by the other user
  */
 export async function getConversations() {
     try {
         const session = await auth();
         if (!session?.user?.id) return [];
 
-        const userId = session.user.id;
+        const currentUserId = session.user.id;
 
-        // This is a bit complex in SQLite/Drizzle without a dedicated conversations table
-        // We find all unique "other" users the current user has chatted with
+        // Get all messages involving the current user
         const allMessages = await db.query.messages.findMany({
             where: or(
-                eq(messages.senderId, userId),
-                eq(messages.receiverId, userId)
+                eq(messages.senderId, currentUserId),
+                eq(messages.receiverId, currentUserId)
             ),
             orderBy: [desc(messages.createdAt)],
         });
 
+        // Group by other user and pick the latest message
         const conversationMap = new Map();
 
         for (const msg of allMessages) {
-            const otherUserId = msg.senderId === userId ? msg.receiverId : msg.senderId;
-
-            if (!conversationMap.has(otherUserId)) {
-                conversationMap.set(otherUserId, {
+            const otherId = msg.senderId === currentUserId ? msg.receiverId : msg.senderId;
+            if (!conversationMap.has(otherId)) {
+                conversationMap.set(otherId, {
                     lastMessage: msg,
-                    otherUserId: otherUserId
+                    otherUserId: otherId
                 });
             }
         }
 
         const conversationList = Array.from(conversationMap.values());
-
-        // Fetch user details for each conversation
         const results = [];
+
         for (const conv of conversationList) {
             const otherUser = await db.query.users.findFirst({
                 where: eq(users.id, conv.otherUserId),
@@ -111,7 +127,7 @@ export async function getConversations() {
 
             if (otherUser) {
                 results.push({
-                    id: otherUser.id, // We use otherUser.id as the conversation ID for simplicity
+                    id: otherUser.id, // User ID as conversation ID
                     updatedAt: conv.lastMessage.createdAt,
                     otherUser: {
                         id: otherUser.id,
@@ -129,7 +145,7 @@ export async function getConversations() {
 
         return results;
     } catch (error) {
-        console.error('Error fetching conversations:', error);
+        console.error("Error fetching conversations:", error);
         return [];
     }
 }
@@ -145,13 +161,13 @@ export async function getUnreadMessageCount() {
         const unread = await db.query.messages.findMany({
             where: and(
                 eq(messages.receiverId, session.user.id),
-                sql`${messages.readAt} IS NULL`
+                isNull(messages.readAt)
             ),
         });
 
         return unread.length;
     } catch (error) {
-        console.error('Error fetching unread count:', error);
+        console.error("Error fetching unread count:", error);
         return 0;
     }
 }
@@ -162,21 +178,23 @@ export async function getUnreadMessageCount() {
 export async function markConversationAsRead(otherUserId: string) {
     try {
         const session = await auth();
-        if (!session?.user?.id) return { error: 'Unauthorized' };
+        if (!session?.user?.id) return { error: "Unauthorized" };
 
         await db.update(messages)
             .set({ readAt: new Date() })
-            .where(and(
-                eq(messages.senderId, otherUserId),
-                eq(messages.receiverId, session.user.id),
-                sql`${messages.readAt} IS NULL`
-            ));
+            .where(
+                and(
+                    eq(messages.senderId, otherUserId),
+                    eq(messages.receiverId, session.user.id),
+                    isNull(messages.readAt)
+                )
+            );
 
         revalidatePath('/messages');
         return { success: true };
     } catch (error) {
-        console.error('Error marking as read:', error);
-        return { error: 'Failed' };
+        console.error("Error marking conversation as read:", error);
+        return { error: "Failed" };
     }
 }
 
@@ -190,8 +208,6 @@ export async function deleteMessage(messageId: string) {
             return { error: "Unauthorized" };
         }
 
-        // Verify the message belongs to the user (sender only can delete)
-        // Note: keeping HEAD implementation but using available imports like 'eq'
         const message = await db.query.messages.findFirst({
             where: eq(messages.id, messageId),
         });
@@ -204,9 +220,7 @@ export async function deleteMessage(messageId: string) {
             return { error: "Unauthorized" };
         }
 
-        // Delete message
         await db.delete(messages).where(eq(messages.id, messageId));
-
         revalidatePath('/messages');
         return { success: true };
     } catch (error) {
@@ -223,18 +237,20 @@ export async function searchUsers(query: string) {
         const session = await auth();
         if (!session?.user?.id) return [];
 
+        const searchQuery = `%${query.toLowerCase()}%`;
+
         return await db.query.users.findMany({
             where: and(
                 or(
-                    sql`lower(${users.name}) LIKE ${'%' + query.toLowerCase() + '%'}`,
-                    sql`lower(${users.username}) LIKE ${'%' + query.toLowerCase() + '%'}`
+                    like(users.name, searchQuery),
+                    like(users.username, searchQuery)
                 ),
                 sql`${users.id} != ${session.user.id}`
             ),
             limit: 10,
         });
     } catch (error) {
-        console.error('Error searching users:', error);
+        console.error("Error searching users:", error);
         return [];
     }
 }

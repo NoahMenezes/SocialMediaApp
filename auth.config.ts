@@ -1,11 +1,21 @@
-import NextAuth from "next-auth";
+import NextAuth, { type DefaultSession } from "next-auth";
 import Google from "next-auth/providers/google";
+import Mastodon from "next-auth/providers/mastodon";
 import Credentials from "next-auth/providers/credentials";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { db } from "@/backend/db";
 import { accounts, sessions, users, verificationTokens } from "@/backend/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import type { AdapterAccountType } from "next-auth/adapters";
+
+declare module "next-auth" {
+    interface Session {
+        user: {
+            id: string;
+        } & DefaultSession["user"]
+    }
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
     adapter: DrizzleAdapter(db, {
@@ -18,6 +28,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         Google({
             clientId: process.env.GOOGLE_CLIENT_ID!,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+        }),
+        Mastodon({
+            clientId: process.env.MASTODON_CLIENT_ID!,
+            clientSecret: process.env.MASTODON_CLIENT_SECRET!,
+            issuer: process.env.MASTODON_INSTANCE_URL!,
         }),
         Credentials({
             name: "credentials",
@@ -47,6 +62,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     return null;
                 }
 
+                // Check if user is verified
+                if (!user.emailVerified) {
+                    throw new Error("Please verify your email first");
+                }
+
                 // Verify password
                 const isValidPassword = await bcrypt.compare(password, user.password);
 
@@ -69,18 +89,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         error: "/login",
     },
     callbacks: {
-        async session({ session, user, token }) {
-            // For database strategy, user is available
-            if (user) {
-                session.user.id = user.id;
+        async signIn({ user, account, profile }: any) {
+            // Drizzle adapter already handles user creation and account linking.
+            // We only need custom logic for Mastodon sync or other special fields.
+
+            if (account?.provider === "mastodon" && user.id) {
+                try {
+                    await db.update(users)
+                        .set({
+                            mastodonId: account.providerAccountId,
+                            mastodonAccessToken: account.access_token,
+                            mastodonInstanceUrl: process.env.MASTODON_INSTANCE_URL,
+                        })
+                        .where(eq(users.id, user.id));
+                } catch (error) {
+                    console.error("Mastodon sync error during sign-in:", error);
+                }
             }
-            // For JWT strategy, use token
-            if (token) {
-                session.user.id = token.sub!;
+
+            return true;
+        },
+        async session({ session, user, token }: any) {
+            if (session.user && (user?.id || token?.id)) {
+                session.user.id = user?.id || (token?.id as string);
             }
             return session;
         },
-        async jwt({ token, user }) {
+        async jwt({ token, user }: any) {
             if (user) {
                 token.id = user.id;
             }
@@ -90,6 +125,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     session: {
         strategy: "jwt",
     },
-
+    secret: process.env.AUTH_SECRET,
 });
-

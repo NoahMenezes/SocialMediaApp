@@ -10,7 +10,7 @@ import {
   FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { login, signInWithGoogle } from "@/backend/actions/auth";
+import { login, signInWithGoogle, signInWithMastodon } from "@/backend/actions/auth";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
@@ -23,6 +23,7 @@ export function LoginForm({
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [mastodonLoading, setMastodonLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -49,6 +50,17 @@ export function LoginForm({
     } catch (error) {
       setError("Failed to sign in with Google. Please try again.");
       setGoogleLoading(false);
+    }
+  }
+
+  async function handleMastodonSignIn() {
+    setError("");
+    setMastodonLoading(true);
+    try {
+      await signInWithMastodon();
+    } catch (error) {
+      setError("Failed to sign in with Mastodon. Please try again.");
+      setMastodonLoading(false);
     }
   }
 
@@ -113,8 +125,8 @@ export function LoginForm({
               variant="outline"
               type="button"
               onClick={handleGoogleSignIn}
-              disabled={loading || googleLoading}
-              className="h-11 text-base"
+              disabled={loading || googleLoading || mastodonLoading}
+              className="h-11 text-base w-full mb-3"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -140,6 +152,25 @@ export function LoginForm({
               </svg>
               <span className="ml-2">
                 {googleLoading ? "Signing in..." : "Continue with Google"}
+              </span>
+            </Button>
+
+            <Button
+              variant="outline"
+              type="button"
+              onClick={handleMastodonSignIn}
+              disabled={loading || googleLoading || mastodonLoading}
+              className="h-11 text-base w-full bg-[#563acc]/10 border-[#563acc]/20 hover:bg-[#563acc]/20 hover:border-[#563acc]/30 text-[#563acc] transition-all"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                className="h-5 w-5 fill-current"
+              >
+                <path d="M23.268 5.313c-.35-2.578-2.617-4.61-5.304-5.004C17.51.242 15.792 0 11.813 0h-.03c-3.98 0-4.835.242-5.288.309C3.882.692 1.496 2.518.917 5.127.64 6.412.61 7.837.661 9.143v.074c.021 1.283.021 2.566.021 3.85 0 .27-.01 1.012.016 1.76.059 1.765.412 3.497 1.107 4.977.85 1.83 2.623 3.084 4.542 3.468 1.948.39 4.312.44 6.787.273 1.21-.082 2.378-.266 3.465-.544.157-.04.307-.08.455-.13l-.01-2.029c-1.921.464-3.92.651-5.811.53-3.031-.194-3.961-1.484-4.223-2.18-.088-.23-.153-.45-.192-.66 1.84.453 3.65.651 5.485.602 1.347-.036 2.502-.191 3.395-.314 1.144-.158 2.05-.386 2.871-.62.062-.018.12-.036.18-.055.674-.21 1.258-.456 1.782-.743.04-.022.08-.044.12-.067.892-.486 1.41-1.026 1.714-1.894.24-.687.214-1.637.214-1.93v-7.39c.002-.516-.002-1.033-.008-1.55zm-3.96 10.428h-2.464V8.124c0-1.262-.531-1.902-1.593-1.902-.857 0-1.442.548-1.748 1.166l-.587 1.307-.587-1.307c-.306-.618-.891-1.166-1.748-1.166-1.062 0-1.593.64-1.593 1.902v7.617H6.12V8.124c0-2.524 1.615-3.813 3.487-3.813 1.122 0 1.988.434 2.585 1.14l.814 1.091.814-1.091c.597-.706 1.463-1.14 2.585-1.14 1.872 0 3.487 1.289 3.487 3.813v7.617z" />
+              </svg>
+              <span className="ml-2">
+                {mastodonLoading ? "Signing in..." : "Continue with Mastodon"}
               </span>
             </Button>
             <FieldDescription className="text-center text-base mt-4">

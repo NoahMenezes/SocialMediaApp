@@ -252,6 +252,48 @@ export const messages = sqliteTable('messages', {
     readAt: integer('read_at', { mode: 'timestamp' }),
 });
 
+// --- News Items ---
+export const news = sqliteTable("news", {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    summary: text('summary').notNull(),
+    text: text('text').notNull(),
+    createdAt: integer("created_at", { mode: 'timestamp' }).$defaultFn(() => new Date()),
+});
+
+// --- Instagram Data ---
+
+export const instagramComments = sqliteTable("instagram_comments", {
+    id: text('id').primaryKey(), // Using Comment_ID from CSV
+    postId: text('post_id'),
+    postCreatorId: text('post_creator_id'),
+    commentText: text('comment_text'),
+    commentCreatorId: text('comment_creator_id'),
+    replyToCommentId: text('reply_to_comment_id'),
+    replyToUserId: text('reply_to_user_id'),
+    replyText: text('reply_text'),
+    emojiUsed: text('emoji_used'),
+    hashtagsUsed: text('hashtags_used'),
+    likesCount: integer('likes_count'),
+    repliesCount: integer('replies_count'),
+    createdAt: integer("created_at", { mode: 'timestamp' }).$defaultFn(() => new Date()),
+});
+
+export const instagramProfiles = sqliteTable("instagram_profiles", {
+    id: text('id').primaryKey(), // Using graphql.user.id
+    username: text('username').notNull(),
+    fullName: text('full_name'),
+    biography: text('biography'),
+    externalUrl: text('external_url'),
+    followersCount: integer('followers_count'),
+    followingCount: integer('following_count'),
+    profilePicUrl: text('profile_pic_url'),
+    isVerified: integer('is_verified', { mode: 'boolean' }),
+    isPrivate: integer('is_private', { mode: 'boolean' }),
+    isBusinessAccount: integer('is_business_account', { mode: 'boolean' }),
+    rawJson: text('raw_json'), // Store full JSON just in case
+    createdAt: integer("created_at", { mode: 'timestamp' }).$defaultFn(() => new Date()),
+});
+
 // Exports
 
 export type User = typeof users.$inferSelect;
@@ -283,4 +325,10 @@ export type Block = typeof blocks.$inferSelect;
 export type NewBlock = typeof blocks.$inferInsert;
 export type Mute = typeof mutes.$inferSelect;
 export type NewMute = typeof mutes.$inferInsert;
+export type News = typeof news.$inferSelect;
+export type NewNews = typeof news.$inferInsert;
+export type InstagramComment = typeof instagramComments.$inferSelect;
+export type NewInstagramComment = typeof instagramComments.$inferInsert;
+export type InstagramProfile = typeof instagramProfiles.$inferSelect;
+export type NewInstagramProfile = typeof instagramProfiles.$inferInsert;
 
