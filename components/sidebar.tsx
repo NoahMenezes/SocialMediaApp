@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, Search, Bell, Mail, Bookmark, User, MoreHorizontal, Hash, Twitter, PlusSquare } from "lucide-react"
+import { Home, Search, Bell, Bookmark, User, MoreHorizontal, Hash, Twitter, PlusSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import Link from "next/link"
