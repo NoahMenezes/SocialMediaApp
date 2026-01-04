@@ -52,7 +52,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
           author: {
              name: "Global News",
              username: "news",
-             avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=news",
+             avatar: "",
              verified: true
           }
       }));
@@ -87,7 +87,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
                     <div key={u.id} className="flex items-center justify-between p-4 hover:bg-white/5 transition-colors cursor-pointer">
                         <div className="flex items-center gap-3">
                             <Avatar>
-                                <AvatarImage src={u.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.name}`} />
+                                <AvatarImage src={u.image || ""} />
                                 <AvatarFallback>{u.name[0]}</AvatarFallback>
                             </Avatar>
                             <div>

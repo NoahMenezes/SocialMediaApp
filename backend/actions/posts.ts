@@ -43,7 +43,7 @@ export async function createPost(formData: FormData) {
             author: {
                 name: author?.name || user.name || "Unknown",
                 username: author?.username || "unknown",
-                avatar: author?.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${author?.name || 'User'}`,
+                avatar: author?.image || "",
                 verified: false
             }
         }
@@ -133,7 +133,7 @@ export async function getPosts(userId?: string, query?: string, page: number = 1
             author: {
                 name: post.author?.name || "Unknown",
                 username: post.author?.username || "unknown",
-                avatar: post.author?.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author?.name || 'User'}`,
+                avatar: post.author?.image || "", // Empty if no image
                 verified: false
             },
             source: 'app'
@@ -151,7 +151,7 @@ export async function getPosts(userId?: string, query?: string, page: number = 1
             author: {
                 name: "Global News",
                 username: "newsbot",
-                avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=news",
+                avatar: "", // No default avatar
                 verified: true
             },
             source: 'news'
@@ -169,7 +169,7 @@ export async function getPosts(userId?: string, query?: string, page: number = 1
             author: {
                 name: profile.fullName || profile.username,
                 username: profile.username,
-                avatar: profile.profilePicUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`,
+                avatar: profile.profilePicUrl || "",
                 verified: profile.isVerified || false
             },
             source: 'instagram'
