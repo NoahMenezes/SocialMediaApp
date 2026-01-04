@@ -58,6 +58,7 @@ export async function createPost(formData: FormData) {
 
 export async function getPosts(userId?: string, query?: string, page: number = 1, pageSize: number = 20) {
     try {
+        const currentUser = await getCurrentUser();
         const offset = (page - 1) * pageSize;
 
         // Common definition for post selection to ensure consistency
@@ -102,39 +103,18 @@ export async function getPosts(userId?: string, query?: string, page: number = 1
             postsQuery = postsQuery.where(sql`${posts.content} LIKE ${`%${query}%`}`);
         }
 
-        // 2. Fetch News (Treat as Posts)
-        let newsQuery = db.select().from(news);
-        if (query) {
-            // @ts-ignore
-            newsQuery = newsQuery.where(
-                // @ts-ignore
-                sql`${news.summary} LIKE ${`%${query}%`} OR ${news.text} LIKE ${`%${query}%`}`
-            );
-        }
-
-        // 3. Fetch Instagram Profiles (Treat as "New User" posts)
-        let instaQuery = db.select().from(instagramProfiles);
-        if (query) {
-            // @ts-ignore
-            instaQuery = instaQuery.where(
-                // @ts-ignore
-                sql`${instagramProfiles.username} LIKE ${`%${query}%`} OR ${instagramProfiles.fullName} LIKE ${`%${query}%`}`
-            );
-        }
-
-        // Execute queries in parallel with LIMIT and OFFSET
-        const [postsResult, repostsResult, newsResult, instaResult] = await Promise.all([
+        // Execute Queries
+        const [postsResult, repostsResult] = await Promise.all([
             postsQuery.orderBy(desc(posts.createdAt)).limit(pageSize).offset(offset),
             repostsQuery ? repostsQuery.orderBy(desc(reposts.createdAt)).limit(pageSize).offset(offset) : Promise.resolve([]),
-            newsQuery.orderBy(desc(news.createdAt)).limit(Math.max(2, Math.floor(pageSize / 4))).offset(Math.floor(offset / 4)),
-            instaQuery.limit(Math.max(2, Math.floor(pageSize / 4))).offset(Math.floor(offset / 4))
         ]);
 
-        // Transform Posts
+        // Transform Posts (Direct Authored)
         const formattedPosts = postsResult.map(post => ({
             id: post.id,
             content: post.content,
             timestamp: post.createdAt ? formatTimestamp(post.createdAt) : "",
+            rawDate: post.createdAt,
             likes: post.likesCount || 0,
             reposts: post.reblogsCount || 0,
             comments: post.repliesCount || 0,
@@ -142,18 +122,19 @@ export async function getPosts(userId?: string, query?: string, page: number = 1
             author: {
                 name: post.author?.name || "Unknown",
                 username: post.author?.username || "unknown",
-                avatar: post.author?.image || "", // Empty if no image
+                avatar: post.author?.image || "",
                 verified: false
             },
             source: 'app',
             isRepost: false
         }));
 
-        // Transform Reposts
+        // Transform Reposts (Indirect)
         const formattedReposts = (repostsResult as any[]).map(post => ({
             id: post.id,
             content: post.content,
             timestamp: post.createdAt ? formatTimestamp(post.createdAt) : "",
+            rawDate: post.createdAt,
             likes: post.likesCount || 0,
             reposts: post.reblogsCount || 0,
             comments: post.repliesCount || 0,
@@ -168,59 +149,22 @@ export async function getPosts(userId?: string, query?: string, page: number = 1
             isRepost: true
         }));
 
-        // Transform News
-        const formattedNews = newsResult.map(item => ({
-            id: item.id,
-            content: `📰 ${item.summary}\n\n${item.text}`,
-            timestamp: item.createdAt ? formatTimestamp(item.createdAt) : "",
-            likes: 0,
-            reposts: 0,
-            comments: 0,
-            image: null, // News usually doesn't have an image col in this schema
-            author: {
-                name: "Global News",
-                username: "newsbot",
-                avatar: "", // No default avatar
-                verified: true
-            },
-            source: 'news'
-        }));
-
-        // Transform Instagram Profiles
-        const formattedInsta = instaResult.map(profile => ({
-            id: profile.id,
-            content: `👋 New creator joined: ${profile.fullName || profile.username}\n\n${profile.biography || "No bio available."}`,
-            timestamp: profile.createdAt ? formatTimestamp(profile.createdAt) : "",
-            likes: profile.followersCount || 0, // Use followers as "likes" for fun
-            reposts: 0,
-            comments: 0,
-            image: profile.profilePicUrl,
-            author: {
-                name: profile.fullName || profile.username,
-                username: profile.username,
-                avatar: profile.profilePicUrl || "",
-                verified: profile.isVerified || false
-            },
-            source: 'instagram'
-        }));
-
         // Combine and Sort
-        // Combine and Sort
-        const combinedFeed = [...formattedPosts, ...formattedReposts, ...formattedNews, ...formattedInsta];
+        let combinedFeed: any[] = [];
+        if (userId) {
+            // Profile View: Only show user's posts and reposts
+            combinedFeed = [...formattedPosts, ...formattedReposts];
+        } else {
+            // Feed View: Show all real posts/reposts
+            combinedFeed = [...formattedPosts, ...formattedReposts];
+        }
 
-        // Shuffle slightly or sort by date? 
-        // Since news/insta might have old dates or all same dates (import time), strict date sort might bunch them.
-        // But for "average social media app", date sort is standard.
-        // Use a simple date sort, fallback to random if dates match.
-        // Note: formatTimestamp returns a string, so we can't sort by that. We rely on the fact that we fetched them ordered, but combining breaks order.
-        // We should ideally keep the raw date for sorting.
-        // Re-mapping for sort... actually, let's just interleave or simply sort by id if dates are weird.
-        // For this task, simple concatenation is often fine, but let's try to randomize or mix if query is generic.
-
-        // IF searching, rank by relevance? Simple concat is fine.
-        // IF feed (no query), let's sort by random to simulate a "discovery" feed if dates are identical (import artifacts).
-
-        return combinedFeed.sort(() => Math.random() - 0.5); // Simple shuffle for "Feed" feel since imported dates might be identical.
+        // Sort by date (descending)
+        return combinedFeed.sort((a, b) => {
+            const dateA = a.rawDate ? new Date(a.rawDate).getTime() : 0;
+            const dateB = b.rawDate ? new Date(b.rawDate).getTime() : 0;
+            return dateB - dateA;
+        });
 
     } catch (error) {
         console.error("Failed to fetch posts", error)

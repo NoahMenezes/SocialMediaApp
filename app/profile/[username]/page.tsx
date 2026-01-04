@@ -6,6 +6,8 @@ import { getPosts } from "@/backend/actions/posts";
 import { notFound } from "next/navigation";
 import { ProfileView } from "@/components/profile-view";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const sessionUser = await getCurrentUser();
   const { username } = await params;
@@ -27,13 +29,13 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
   // If user not found, create a temporary placeholder with 0 stats as requested
   if (!user) {
       if (username === 'me' && sessionUser) {
-           // Fallback for 'me' if DB lookup fails but session exists (rare)
+           // Fallback for 'me' if DB lookup fails but session exists
            user = {
                ...sessionUser,
                followersCount: 0,
                followingCount: 0,
                postsCount: 0,
-               bio: "Welcome to your profile!",
+               bio: "",
                website: "",
                location: "",
                createdAt: new Date(),
@@ -50,7 +52,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
                followersCount: 0,
                followingCount: 0,
                postsCount: 0,
-               bio: "This profile is not yet active.",
+               bio: "",
                website: null,
                location: null,
                createdAt: new Date(),

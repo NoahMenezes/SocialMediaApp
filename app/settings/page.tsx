@@ -1,6 +1,8 @@
 import { AppLayout } from "@/components/app-layout"
 import { getCurrentUser } from "@/backend/actions/auth"
 
+export const dynamic = "force-dynamic";
+
 export default async function SettingsPage() {
     const user = await getCurrentUser()
 

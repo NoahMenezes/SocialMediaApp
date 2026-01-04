@@ -4,6 +4,8 @@ import { getBookmarkedPosts } from "@/backend/actions/bookmarks";
 import { PostCard } from "@/components/post-card";
 import { Bookmark } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function BookmarksPage() {
   const user = await getCurrentUser();
   const bookmarkedPosts = await getBookmarkedPosts();

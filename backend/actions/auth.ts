@@ -219,6 +219,7 @@ export async function getCurrentUser() {
       name: user.name,
       email: user.email,
       image: user.image,
+      username: user.username,
       emailVerified: user.emailVerified,
     };
   } catch (error) {

@@ -5,6 +5,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Heart, UserPlus, MessageCircle, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export default async function NotificationsPage() {
   const user = await getCurrentUser();
   const notifications = await getNotifications();

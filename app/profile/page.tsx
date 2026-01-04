@@ -4,6 +4,8 @@ import { db } from "@/backend/db";
 import { users } from "@/backend/db/schema";
 import { eq } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProfileRedirect() {
   const sessionUser = await getCurrentUser();
   

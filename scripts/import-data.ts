@@ -28,7 +28,7 @@ const db = drizzle(client, { schema });
 async function importNewsData() {
     console.log('📰 Importing News Dataset...');
 
-    const newsPath = path.join(process.cwd(), 'NewsDataset.csv');
+    const newsPath = path.join(process.cwd(), 'raw_data', 'NewsDataset.csv');
     const newsContent = fs.readFileSync(newsPath, 'utf-8');
 
     const records = parse(newsContent, {
@@ -59,7 +59,7 @@ async function importNewsData() {
 async function importInstagramComments() {
     console.log('💬 Importing Instagram Comments...');
 
-    const csvPath = path.join(process.cwd(), 'realistic_instagram_dataset.csv');
+    const csvPath = path.join(process.cwd(), 'raw_data', 'realistic_instagram_dataset.csv');
     const csvContent = fs.readFileSync(csvPath, 'utf-8');
 
     const records = parse(csvContent, {
@@ -117,6 +117,7 @@ async function importInstagramProfiles() {
             if (data.graphql && data.graphql.user) {
                 const user = data.graphql.user;
 
+                // Insert into instagramProfiles
                 await db.insert(schema.instagramProfiles).values({
                     id: user.id,
                     username: user.username,
@@ -131,6 +132,25 @@ async function importInstagramProfiles() {
                     isBusinessAccount: user.is_business_account || false,
                     rawJson: JSON.stringify(data),
                 }).onConflictDoNothing();
+
+                // Also create a user account for this profile
+                await db.insert(schema.users).values({
+                    id: user.id,
+                    name: user.full_name || user.username,
+                    email: `${user.username}@example.com`,
+                    username: user.username,
+                    image: user.profile_pic_url || null,
+                    bio: user.biography || null,
+                }).onConflictDoUpdate({
+                    target: schema.users.id,
+                    set: {
+                        name: user.full_name || user.username,
+                        email: `${user.username}@example.com`,
+                        username: user.username,
+                        image: user.profile_pic_url || null,
+                        bio: user.biography || null,
+                    }
+                });
 
                 totalImported++;
 
@@ -149,29 +169,36 @@ async function importInstagramProfiles() {
 async function createSamplePostsFromData() {
     console.log('📝 Creating sample posts from imported data...');
 
-    // Get a sample user (you'll need to have at least one user in your database)
-    const users = await db.select().from(schema.users).limit(1);
+    // Get all users
+    const allUsers = await db.select().from(schema.users);
 
-    if (users.length === 0) {
+    if (allUsers.length === 0) {
         console.log('⚠️  No users found. Please create a user account first.');
         return;
     }
 
-    const userId = users[0].id;
+    console.log(`Using ${allUsers.length} users to distribute posts`);
 
-    // Get some news items
-    const newsItems = await db.select().from(schema.news).limit(10);
+    // Get some news items (let's get more for variety)
+    const newsItems = await db.select().from(schema.news).limit(50);
+
+    // First, clear existing sample posts if they were all from one user
+    await db.delete(schema.posts);
 
     // Create posts from news
-    for (const news of newsItems) {
+    for (let i = 0; i < newsItems.length; i++) {
+        const news = newsItems[i];
+        // Assign to a random user or cycle through users
+        const user = allUsers[i % allUsers.length];
+
         await db.insert(schema.posts).values({
-            userId: userId,
+            userId: user.id,
             content: `${news.summary}\n\n${news.text.substring(0, 200)}...`,
             visibility: 'public',
         }).onConflictDoNothing();
     }
 
-    console.log(`✅ Created ${newsItems.length} sample posts from news data!`);
+    console.log(`✅ Created ${newsItems.length} sample posts from news data with diverse authors!`);
 }
 
 async function checkData() {
@@ -194,10 +221,10 @@ async function main() {
     try {
         console.log('🚀 Starting data import...\n');
 
-        await importNewsData();
-        await importInstagramComments();
         await importInstagramProfiles();
         await createSamplePostsFromData();
+        await importNewsData();
+        await importInstagramComments();
         await checkData();
 
         console.log('\n✨ All data imported successfully!');

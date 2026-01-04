@@ -11,6 +11,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { PostCard } from "@/components/post-card";
 
+export const dynamic = "force-dynamic";
+
 function formatTimestamp(date: Date) {
     const now = new Date();
     const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
@@ -37,25 +39,6 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
               like(users.username, `%${q}%`)
           )
       ).limit(20);
-  } else {
-      // Fetch news if no search query
-      const rawNews = await db.select().from(news).orderBy(desc(news.createdAt)).limit(50);
-      
-      newsItems = rawNews.map(item => ({
-          id: item.id,
-          content: `${item.summary}\n\n${item.text}`,
-          timestamp: item.createdAt ? formatTimestamp(item.createdAt) : "Just now",
-          likes: 0,
-          comments: 0,
-          reposts: 0,
-          image: null,
-          author: {
-             name: "Global News",
-             username: "news",
-             avatar: "",
-             verified: true
-          }
-      }));
   }
 
   return (
@@ -71,7 +54,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
                 <Input
                 name="q"
                 defaultValue={q}
-                placeholder="Search for people or topics"
+                placeholder="Search for people"
                 className="pl-12 bg-zinc-900 border-none rounded-full h-12 text-white placeholder:text-zinc-500 focus-visible:ring-1 focus-visible:ring-indigo-500 transition-all"
                 />
             </div>
@@ -111,18 +94,12 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
                 )}
               </>
           ) : (
-              // News Feed
-              <>
-                  <h2 className="px-4 py-4 text-xl font-bold text-white">Latest News</h2>
-                  {newsItems.map((post, index) => (
-                      <PostCard key={post.id} post={post as any} index={index} />
-                  ))}
-                  {newsItems.length === 0 && (
-                      <div className="p-10 text-center text-zinc-500">
-                          <p>No news available at the moment.</p>
-                      </div>
-                  )}
-              </>
+              // Default state
+              <div className="p-20 text-center text-zinc-500">
+                  <Search className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                  <p className="text-xl font-medium text-white mb-2">Search for Friends</p>
+                  <p>Find people you know and connect with them.</p>
+              </div>
           )}
        </div>
     </AppLayout>
