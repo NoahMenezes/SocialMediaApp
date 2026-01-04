@@ -2,162 +2,149 @@
 
 import { AppLayout } from "@/components/app-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CalendarDays, ArrowLeft, MoreHorizontal, Link as LinkIcon, MapPin, PenSquare } from "lucide-react";
+import { CalendarDays, ArrowLeft, MoreHorizontal, Link as LinkIcon, MapPin } from "lucide-react";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
 import { PostCard } from "@/components/post-card";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-export function ProfileView({ 
-  user, 
-  sessionUser, 
-  mappedPosts 
-}: { 
-  user: any, 
-  sessionUser: any, 
-  mappedPosts: any[] 
+export function ProfileView({
+  user,
+  sessionUser,
+  mappedPosts
+}: {
+  user: any,
+  sessionUser: any,
+  mappedPosts: any[]
 }) {
   const isOwnProfile = sessionUser?.id === user.id;
 
   return (
-    <AppLayout user={sessionUser} className="border-x border-border/40">
+    <AppLayout user={sessionUser}>
       {/* Header */}
-      <div className="sticky top-0 bg-background/80 backdrop-blur-md z-30 border-b border-border/40 px-4 h-14 flex items-center gap-6">
+      <div className="sticky top-0 bg-black/80 backdrop-blur-md z-30 border-b border-white/5 px-4 h-14 flex items-center gap-8">
         <Link href="/">
-          <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted/50 -ml-2">
+          <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10 -ml-2 text-white">
             <ArrowLeft className="w-5 h-5" />
           </Button>
         </Link>
         <div className="flex flex-col">
-          <h2 className="text-xl font-bold leading-tight">{user.name}</h2>
-          <p className="text-xs text-muted-foreground">{mappedPosts.length} posts</p>
+          <h2 className="text-xl font-bold leading-tight text-white">{user.name}</h2>
+          <p className="text-xs text-zinc-500">{mappedPosts.length} posts</p>
         </div>
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-      >
+      <div className="bg-black">
         {/* Banner */}
-        <div className="h-40 sm:h-52 bg-gradient-to-br from-primary/30 via-accent/20 to-background relative overflow-hidden">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60" />
+        <div className="h-48 sm:h-52 bg-zinc-900 border-b border-white/5 relative">
+          {user.headerImage && (
+            <img src={user.headerImage} alt="Cover" className="w-full h-full object-cover" />
+          )}
         </div>
-        
+
         {/* Profile Info Section */}
         <div className="relative px-4 pb-4">
           <div className="flex justify-between items-start">
-            <div className="relative -mt-16 sm:-mt-24 mb-4">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                transition={{ type: "spring", stiffness: 300 }}
-                className="rounded-full p-1 bg-background"
-              >
-                <Avatar className="w-28 h-28 sm:w-44 sm:h-44 border-4 border-background text-4xl shadow-2xl">
+            <div className="relative -mt-16 sm:-mt-20 mb-4">
+              <div className="rounded-full p-1 bg-black">
+                <Avatar className="w-32 h-32 sm:w-36 sm:h-36 border-4 border-black">
                   <AvatarImage src={user.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} />
-                  <AvatarFallback>{user.name[0]}</AvatarFallback>
+                  <AvatarFallback className="bg-zinc-800 text-white text-3xl font-bold">{user.name[0]}</AvatarFallback>
                 </Avatar>
-              </motion.div>
+              </div>
             </div>
-            
+
             <div className="flex gap-2 mt-4">
-              <Button variant="outline" size="icon" className="rounded-full border-border/40 hover:bg-muted/50 transition-colors">
+              <Button variant="outline" size="icon" className="rounded-full border-white/10 hover:bg-white/10 text-white">
                 <MoreHorizontal className="w-5 h-5" />
               </Button>
               {isOwnProfile ? (
                 <EditProfileDialog user={user} />
               ) : (
-                <Button className="rounded-full font-bold px-8 shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all active:scale-95">Follow</Button>
+                <Button className="rounded-full font-bold px-5 bg-white text-black hover:bg-white/90">Follow</Button>
               )}
             </div>
           </div>
 
           <div className="mt-2 space-y-4">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
-                {user.name}
-                <span className="bg-primary text-primary-foreground rounded-full p-[2px] shadow-sm">
-                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                </span>
-              </h1>
-              <p className="text-muted-foreground text-lg">@{user.username || user.name.replace(/\s+/g, '').toLowerCase()}</p>
-            </div>
-            
-            <div className="text-foreground/90 leading-relaxed whitespace-pre-wrap max-w-xl text-lg">
-              {user.bio || "Crafting digital experiences and building the future of social networking. 🚀"}
-            </div>
-            
-            <div className="flex flex-wrap items-center gap-y-3 gap-x-6 text-muted-foreground text-sm font-medium">
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/40 border border-border/20">
-                <MapPin className="w-4 h-4" />
-                <span>San Francisco, CA</span>
+              <div className="flex items-center gap-1">
+                <h1 className="text-2xl font-bold tracking-tight text-white">
+                  {user.name}
+                </h1>
+                {user.verified && (
+                  <svg viewBox="0 0 24 24" aria-label="Verified account" className="w-5 h-5 fill-white"><g><path d="M22.5 12.5c0-1.58-.88-2.95-2.18-3.66.15-.44.23-.91.23-1.4 0-2.45-1.99-4.44-4.44-4.44-.49 0-.96.08-1.4.23C14.05 1.93 12.68 1.05 11.1 1.05c-1.58 0-2.95.88-3.66 2.18-.44-.15-.91-.23-1.4-.23-2.45 0-4.44 1.99-4.44 4.44 0 .49.08.96.23 1.4C.68 9.55-.2 10.92-.2 12.5c0 1.58.88 2.95 2.18 3.66-.15.44-.23.91-.23 1.4 0 2.45 1.99 4.44 4.44 4.44.49 0 .96-.08 1.4-.23 1.4 1.3 2.77 2.18 4.35 2.18 1.58 0 2.95-.88 3.66-2.18.44.15.91.23 1.4.23 2.45 0 4.44-1.99 4.44-4.44 0-.49-.08-.96-.23-1.4 1.3-.71 2.18-2.08 2.18-3.66zm-8.22-3.13l-5.63 5.62-2.73-2.73L4.85 13.3l3.8 3.81L15.4 10.43l-1.12-1.06z"></path></g></svg>
+                )}
               </div>
-              <div className="flex items-center gap-1.5 group cursor-pointer">
-                <LinkIcon className="w-4 h-4" />
-                <span className="text-primary group-hover:underline">github.com/{user.username || "user"}</span>
+              <p className="text-zinc-500">@{user.username || user.name.replace(/\s+/g, '').toLowerCase()}</p>
+            </div>
+
+            {user.bio && (
+              <div className="text-white leading-normal whitespace-pre-wrap max-w-xl">
+                {user.bio}
               </div>
-              <div className="flex items-center gap-1.5">
+            )}
+
+            <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-zinc-500 text-sm">
+              {user.location && (
+                <div className="flex items-center gap-1">
+                  <MapPin className="w-4 h-4" />
+                  <span>{user.location}</span>
+                </div>
+              )}
+              {user.website && (
+                <div className="flex items-center gap-1 text-indigo-400">
+                  <LinkIcon className="w-4 h-4 text-zinc-500" />
+                  <a href={user.website} target="_blank" rel="noopener noreferrer" className="hover:underline">{user.website.replace(/^https?:\/\//, '')}</a>
+                </div>
+              )}
+              <div className="flex items-center gap-1">
                 <CalendarDays className="w-4 h-4" />
                 <span>Joined {user.createdAt ? new Date(user.createdAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : 'Jan 2024'}</span>
               </div>
             </div>
-            
-             <div className="flex items-center gap-8 pt-2">
-               <div className="flex items-center gap-1.5 hover:underline decoration-muted-foreground cursor-pointer group">
-                  <span className="font-bold text-foreground text-lg">0</span>
-                  <span className="text-muted-foreground group-hover:text-foreground transition-colors">Following</span>
-               </div>
-               <div className="flex items-center gap-1.5 hover:underline decoration-muted-foreground cursor-pointer group">
-                  <span className="font-bold text-foreground text-lg">0</span>
-                  <span className="text-muted-foreground group-hover:text-foreground transition-colors">Followers</span>
-               </div>
+
+            <div className="flex items-center gap-5 text-sm">
+              <button className="flex items-center gap-1 hover:underline cursor-pointer">
+                <span className="font-bold text-white">{user.followingCount || 0}</span>
+                <span className="text-zinc-500">Following</span>
+              </button>
+              <button className="flex items-center gap-1 hover:underline cursor-pointer">
+                <span className="font-bold text-white">{user.followersCount || 0}</span>
+                <span className="text-zinc-500">Followers</span>
+              </button>
             </div>
           </div>
         </div>
-        
-        {/* Tabs - Glassmorphism */}
-        <div className="flex border-b border-border/40 sticky top-14 bg-background/90 backdrop-blur-xl z-20">
-            <button className="flex-1 py-4 text-center font-bold relative group overflow-hidden">
-              <span className="relative z-10">Posts</span>
-              <motion.div 
-                layoutId="activeTab"
-                className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-full shadow-[0_-2px_8px_rgba(var(--primary),0.3)]" 
-              />
-              <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
-            <button className="flex-1 py-4 text-center text-muted-foreground hover:bg-muted/30 transition-all font-medium">Replies</button>
-            <button className="flex-1 py-4 text-center text-muted-foreground hover:bg-muted/30 transition-all font-medium">Media</button>
-            <button className="flex-1 py-4 text-center text-muted-foreground hover:bg-muted/30 transition-all font-medium">Likes</button>
+
+        {/* Tabs */}
+        <div className="flex border-b border-white/5 sticky top-14 bg-black/80 backdrop-blur-md z-20">
+          <button className="flex-1 py-4 text-center text-white font-bold relative transition-colors hover:bg-white/5">
+            Posts
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-1 bg-white rounded-full" />
+          </button>
+          <button className="flex-1 py-4 text-center text-zinc-500 hover:bg-white/5 transition-colors font-medium">Replies</button>
+          <button className="flex-1 py-4 text-center text-zinc-500 hover:bg-white/5 transition-colors font-medium">Highlights</button>
+          <button className="flex-1 py-4 text-center text-zinc-500 hover:bg-white/5 transition-colors font-medium">Media</button>
         </div>
-        
+
         {/* Posts Content */}
-        <div className="divide-y divide-border/40">
-            {mappedPosts.length > 0 ? (
-                mappedPosts.map((post, index) => (
-                    <PostCard key={post.id} post={post} index={index} />
-                ))
-            ) : (
-                <div className="p-20 text-center space-y-6">
-                    <div className="w-24 h-24 bg-gradient-to-tr from-muted/40 to-muted/10 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 rotate-3 shadow-inner">
-                       <PenSquare className="w-12 h-12 text-muted-foreground/30 -rotate-3" />
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-3xl font-bold tracking-tight">No posts yet</h3>
-                      <p className="text-muted-foreground text-lg max-w-[300px] mx-auto leading-relaxed">
-                        When {isOwnProfile ? "you post" : "they post"} something, it will show up here.
-                      </p>
-                    </div>
-                    {isOwnProfile && (
-                      <Button className="rounded-full px-10 h-12 text-lg font-bold shadow-xl shadow-primary/20 hover:scale-105 transition-transform">
-                        Create your first post
-                      </Button>
-                    )}
-                </div>
-            )}
+        <div className="divide-y divide-white/5">
+          {mappedPosts.length > 0 ? (
+            mappedPosts.map((post, index) => (
+              <PostCard key={post.id} post={post} index={index} />
+            ))
+          ) : (
+            <div className="p-12 text-center py-20">
+              <h3 className="text-xl font-bold text-white mb-2">No posts yet</h3>
+              <p className="text-zinc-500 max-w-xs mx-auto">
+                {isOwnProfile ? "When you share posts, they'll show up here." : "This user hasn't shared any posts yet."}
+              </p>
+            </div>
+          )}
         </div>
-      </motion.div>
+      </div>
     </AppLayout>
   );
 }

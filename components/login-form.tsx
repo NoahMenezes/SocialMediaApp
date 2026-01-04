@@ -53,19 +53,13 @@ export function LoginForm({
   }
 
   return (
-    <div className="w-full rounded-lg border bg-card p-8 shadow-lg">
+    <div className="w-full">
       <form
         className={cn("flex flex-col gap-6", className)}
         onSubmit={handleSubmit}
         {...props}
       >
         <FieldGroup>
-          <div className="flex flex-col items-center gap-2 text-center mb-2">
-            <h1 className="text-3xl font-bold tracking-tight">Welcome Back</h1>
-            <p className="text-muted-foreground text-base text-balance">
-              Enter your credentials to access your account
-            </p>
-          </div>
           {error && (
             <div className="bg-destructive/10 text-destructive text-sm p-4 rounded-lg border border-destructive/20">
               {error}

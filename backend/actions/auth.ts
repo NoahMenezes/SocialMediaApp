@@ -59,6 +59,22 @@ export async function signup(formData: FormData) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Get custom username or generate one
+    const customUsername = formData.get("username") as string;
+    const finalUsername = customUsername
+      ? customUsername.toLowerCase().replace(/\s+/g, '')
+      : name.toLowerCase().replace(/\s+/g, '') + Math.floor(Math.random() * 1000);
+
+    // Check if username already exists
+    if (customUsername) {
+      const existingUsername = await db.query.users.findFirst({
+        where: eq(users.username, finalUsername),
+      });
+      if (existingUsername) {
+        return { error: "Username is already taken" };
+      }
+    }
+
     // Create user
     const [newUser] = await db
       .insert(users)
@@ -67,10 +83,9 @@ export async function signup(formData: FormData) {
         name,
         email,
         password: hashedPassword,
-        username: name.toLowerCase().replace(/\s+/g, '') + Math.floor(Math.random() * 1000),
+        username: finalUsername,
         emailVerified: new Date(), // Auto-verify for now, or implement email verification
       })
-
       .returning();
 
     return {

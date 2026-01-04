@@ -70,11 +70,7 @@ const config: Config = {
                     border: 'var(--sidebar-border)',
                     ring: 'var(--sidebar-ring)'
                 }
-<<<<<<< HEAD
             }
-=======
-            },
->>>>>>> d44b90a855c534bb865b12274fd955d3e33b65ff
         }
     },
     plugins: [require("tailwindcss-animate")],

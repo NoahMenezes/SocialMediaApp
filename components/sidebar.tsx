@@ -1,99 +1,88 @@
 "use client"
 
-import { Home, Search, Bell, Mail, Bookmark, User, MoreHorizontal, PenSquare, LogOut, Settings } from "lucide-react"
+import { Home, Search, Bell, Mail, Bookmark, User, MoreHorizontal, Hash, Twitter, PlusSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { FadeIn, SlideIn } from "@/components/ui/fade-in"
-import { signOut } from "next-auth/react"
+import { cn } from "@/lib/utils"
 
-export function Sidebar({ user }: { user?: { name: string; email: string; image?: string | null } | null }) {
+export function Sidebar({ user }: { user?: { name: string; email: string; image?: string | null; username?: string | null } | null }) {
   const pathname = usePathname()
 
   const navItems = [
     { icon: Home, label: "Home", href: "/" },
-    { icon: Search, label: "Search", href: "/explore" },
+    { icon: Hash, label: "Explore", href: "/explore" },
     { icon: Bell, label: "Notifications", href: "/notifications" },
     { icon: Mail, label: "Messages", href: "/messages" },
     { icon: Bookmark, label: "Bookmarks", href: "/bookmarks" },
-    { icon: User, label: "Profile", href: "/profile" },
-    { icon: Settings, label: "Settings", href: "/settings" },
+    { icon: User, label: "Profile", href: `/profile/${user?.username || 'me'}` },
   ]
 
   return (
-    <aside className="fixed md:sticky top-0 left-0 h-screen w-20 xl:w-72 border-r border-border/50 bg-background/95 backdrop-blur z-50 flex flex-col items-center xl:items-stretch py-4 select-none">
+    <aside className="fixed md:sticky top-0 left-0 h-screen w-20 xl:w-72 bg-black border-r border-white/5 flex flex-col py-4 select-none z-50 overflow-y-auto">
       {/* Logo */}
-      <SlideIn delay={0.1} className="px-2 xl:px-6 mb-2 xl:mb-6">
-        <Link href="/" className="flex items-center justify-center xl:justify-start w-12 h-12 xl:w-auto xl:h-auto hover:bg-muted/50 rounded-full xl:rounded-none p-2 xl:p-0 transition-all">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/25">
-            <span className="text-sm font-bold text-white">X</span>
-          </div>
+      <div className="px-4 mb-4 flex justify-center xl:justify-start">
+        <Link href="/" className="w-12 h-12 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors">
+          <Twitter className="w-8 h-8 text-white fill-current" />
         </Link>
-      </SlideIn>
+      </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-2 px-2 xl:px-4 w-full">
-        {navItems.map((item, i) => {
+      <nav className="flex-1 px-2 space-y-1">
+        {navItems.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href
           return (
-            <SlideIn key={item.label} delay={0.1 + (i * 0.05)}>
+            <div key={item.label} className="flex justify-center xl:justify-start">
               <Link
                 href={item.href}
-                className={`flex items-center justify-center xl:justify-start gap-4 p-3 rounded-full transition-all duration-200 group ${isActive
-                  ? "font-bold text-primary bg-primary/10"
-                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                  }`}
+                className={cn(
+                  "flex items-center gap-4 p-3 rounded-full transition-all duration-200 group hover:bg-white/10 w-fit xl:pr-8",
+                  isActive ? "font-bold" : "font-normal"
+                )}
               >
-                <Icon className={`w-7 h-7 xl:w-6 xl:h-6 ${isActive ? "fill-current" : ""}`} strokeWidth={isActive ? 2.5 : 2} />
+                <Icon
+                  className={cn(
+                    "w-7 h-7 transition-transform group-active:scale-95",
+                    isActive ? "stroke-[3px]" : "stroke-2"
+                  )}
+                />
                 <span className="hidden xl:block text-xl">{item.label}</span>
               </Link>
-            </SlideIn>
+            </div>
           )
         })}
+
+        {/* Post Button */}
+        <div className="pt-4 px-2">
+          <Button className="w-full h-12 rounded-full bg-white text-black hover:bg-white/90 font-bold text-lg hidden xl:block shadow-lg shadow-white/5">
+            Post
+          </Button>
+          <div className="xl:hidden flex justify-center">
+            <Button size="icon" className="w-12 h-12 rounded-full bg-white text-black hover:bg-white/90 shadow-lg shadow-white/5">
+              <PlusSquare className="w-6 h-6" />
+            </Button>
+          </div>
+        </div>
       </nav>
 
-      {/* Post Button */}
-      <div className="px-2 xl:px-4 py-4 w-full">
-        <FadeIn delay={0.5}>
-          <Link href="/#post-input" className="w-full">
-            <Button className="w-12 h-12 xl:w-full xl:h-12 bg-primary hover:bg-primary/90 text-white rounded-full flex items-center justify-center shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all hover:scale-105 active:scale-95">
-              <PenSquare className="w-6 h-6 xl:hidden" />
-              <span className="hidden xl:block font-bold text-lg">Post</span>
-            </Button>
-          </Link>
-        </FadeIn>
+      {/* User Profile / More */}
+      <div className="mt-auto px-2">
+        <button className="w-full flex items-center justify-center xl:justify-between p-3 rounded-full transition-all hover:bg-white/10 group">
+          <div className="flex items-center gap-3">
+            <Avatar className="w-10 h-10 border border-white/10">
+              <AvatarImage src={user?.image || ""} />
+              <AvatarFallback className="bg-zinc-800 text-white">{user?.name?.[0] || 'U'}</AvatarFallback>
+            </Avatar>
+            <div className="hidden xl:flex flex-col items-start leading-tight">
+              <span className="font-bold text-white text-sm truncate max-w-[120px]">{user?.name || "User"}</span>
+              <span className="text-muted-foreground text-xs truncate max-w-[120px]">@{user?.username || "username"}</span>
+            </div>
+          </div>
+          <MoreHorizontal className="hidden xl:block w-5 h-5 text-muted-foreground" />
+        </button>
       </div>
-
-
-      {/* User Profile */}
-      {user ? (
-        <div className="p-2 xl:p-4 mt-auto w-full">
-          <Link href="/profile" className="w-full block">
-            <button className="w-full flex items-center justify-center xl:justify-between gap-3 p-2 xl:px-4 xl:py-3 rounded-full hover:bg-muted/50 transition-all group">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
-                  <AvatarImage src={user.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} />
-                  <AvatarFallback>{user.name[0]}</AvatarFallback>
-                </Avatar>
-                <div className="hidden xl:block text-left min-w-0">
-                  <p className="font-bold text-sm text-foreground truncate leading-tight">{user.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">@{user.name.replace(/\s+/g, '')}</p>
-                </div>
-              </div>
-              <MoreHorizontal className="hidden xl:block w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100" />
-            </button>
-          </Link>
-        </div>
-      ) : (
-
-        <div className="p-2 xl:p-4 mt-auto w-full">
-          <Link href="/login" className="flex items-center justify-center gap-2 p-3 text-muted-foreground hover:text-primary transition-colors">
-            <LogOut className="w-6 h-6" />
-          </Link>
-        </div>
-      )}
     </aside>
   )
 }
