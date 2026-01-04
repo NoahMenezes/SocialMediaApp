@@ -1,6 +1,8 @@
 "use client"
 
+import { useState, useRef } from "react";
 import { AppLayout } from "@/components/app-layout";
+import { updateProfileImage } from "@/backend/actions/user";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CalendarDays, ArrowLeft, MoreHorizontal, Link as LinkIcon, MapPin } from "lucide-react";
 import { EditProfileDialog } from "@/components/edit-profile-dialog";
@@ -19,6 +21,43 @@ export function ProfileView({
   mappedPosts: any[]
 }) {
   const isOwnProfile = sessionUser?.id === user.id;
+
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageClick = () => {
+    if (isOwnProfile) {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // specific max size (e.g. 4MB)
+    if (file.size > 4 * 1024 * 1024) {
+      alert("File size too large. Please choose an image under 4MB.");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = reader.result as string;
+        const result = await updateProfileImage(base64String);
+        if (!result.success) {
+          alert("Failed to update profile picture");
+        }
+        setIsUploading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+       console.error(error);
+       setIsUploading(false);
+    }
+  };
 
   return (
     <AppLayout user={sessionUser}>
@@ -47,11 +86,26 @@ export function ProfileView({
         <div className="relative px-4 pb-4">
           <div className="flex justify-between items-start">
             <div className="relative -mt-16 sm:-mt-20 mb-4">
-              <div className="rounded-full p-1 bg-black">
-                <Avatar className="w-32 h-32 sm:w-36 sm:h-36 border-4 border-black">
+              <div className="rounded-full p-1 bg-black group relative">
+                <Avatar 
+                  className={`w-32 h-32 sm:w-36 sm:h-36 border-4 border-black ${isOwnProfile ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+                  onClick={handleImageClick}
+                >
                   <AvatarImage src={user.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} />
                   <AvatarFallback className="bg-zinc-800 text-white text-3xl font-bold">{user.name[0]}</AvatarFallback>
                 </Avatar>
+                {isOwnProfile && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-white text-xs font-bold bg-black/50 px-2 py-1 rounded">Change</span>
+                  </div>
+                )}
+                <input 
+                   type="file" 
+                   ref={fileInputRef} 
+                   className="hidden" 
+                   accept="image/*"
+                   onChange={handleFileChange}
+                />
               </div>
             </div>
 

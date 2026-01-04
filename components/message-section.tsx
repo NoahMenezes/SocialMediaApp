@@ -111,6 +111,43 @@ export function MessageSection({ user: currentUser }: { user?: { id?: string | n
 
   const selectedConvData = conversations.find(c => c.id === selectedConversation)
 
+  const [isNewMessageMode, setIsNewMessageMode] = useState(false)
+  const [userSearchResults, setUserSearchResults] = useState<any[]>([])
+  
+  const handleUserSearch = async (query: string) => {
+      if (!query.trim()) {
+          setUserSearchResults([])
+          return
+      }
+      const results = await searchUsers(query)
+      setUserSearchResults(results)
+  }
+
+  const startNewConversation = (user: any) => {
+      setIsNewMessageMode(false)
+      // Check if conversation exists
+      const existing = conversations.find(c => c.otherUser?.id === user.id)
+      if (existing) {
+          setSelectedConversation(existing.id)
+      } else {
+          // Optimistically create conversation in state or just select user ID if we handle that
+          // Ideally, we should create a conversation entry or handle 'draft' state.
+          // For simplicity: We will create a fake conversation object and set selectedConversation to user.id (which acts as conv id if we assume 1:1)
+          // BUT getMessages uses conversationId or otherUserId logic? 
+          // getMessages logic in actions/messages.ts uses 'otherUserId' as param! 
+          // So we can just set selectedConversation = user.id
+          setSelectedConversation(user.id)
+          // Add to local conversations list if not present
+           const newConv: Conversation = {
+              id: user.id,
+              updatedAt: new Date(),
+              otherUser: user,
+              lastMessage: null
+           }
+           setConversations([newConv, ...conversations])
+      }
+  }
+
   return (
     <div className="flex bg-black justify-center overflow-hidden min-h-screen">
       <div className="flex w-full max-w-[1400px]">
@@ -130,7 +167,12 @@ export function MessageSection({ user: currentUser }: { user?: { id?: string | n
                   <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-white/10">
                     <Settings className="w-5 h-5" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-white/10">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="rounded-full text-white hover:bg-white/10"
+                    onClick={() => setIsNewMessageMode(!isNewMessageMode)}
+                  >
                     <Mail className="w-5 h-5" />
                   </Button>
                 </div>
@@ -138,13 +180,35 @@ export function MessageSection({ user: currentUser }: { user?: { id?: string | n
               <div className="relative">
                 <Search className="absolute left-3 top-3 w-4 h-4 text-zinc-500" />
                 <Input
-                  placeholder="Search Direct Messages"
+                  placeholder={isNewMessageMode ? "Search people..." : "Search Direct Messages"}
                   className="pl-10 bg-zinc-900 border-none rounded-full h-11 text-sm text-white placeholder:text-zinc-500 focus-visible:ring-1 focus-visible:ring-white/20"
+                  onChange={(e) => isNewMessageMode && handleUserSearch(e.target.value)}
                 />
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto divide-y divide-white/5">
+            {isNewMessageMode ? (
+                 <div className="flex-1 overflow-y-auto px-2">
+                     <p className="px-4 py-2 text-xs font-bold text-zinc-500 uppercase">Suggested</p>
+                     {userSearchResults.map(u => (
+                         <button
+                            key={u.id}
+                            onClick={() => startNewConversation(u)}
+                            className="w-full flex items-center gap-3 p-3 hover:bg-white/10 rounded-xl transition-colors text-left"
+                         >
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage src={u.image || ""} />
+                              <AvatarFallback>{u.name[0]}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <p className="font-bold text-white">{u.name}</p>
+                                <p className="text-xs text-zinc-500">@{u.username}</p>
+                            </div>
+                         </button>
+                     ))}
+                 </div>
+            ) : (
+                <div className="flex-1 overflow-y-auto divide-y divide-white/5">
               {loading ? (
                 <div className="flex items-center justify-center p-8">
                   <Loader2 className="w-6 h-6 animate-spin text-zinc-500" />
@@ -190,6 +254,7 @@ export function MessageSection({ user: currentUser }: { user?: { id?: string | n
                 </div>
               )}
             </div>
+            )}
           </div>
 
           {/* Message Thread */}
