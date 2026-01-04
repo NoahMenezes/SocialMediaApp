@@ -6,7 +6,11 @@ import { Search, MoreHorizontal, CheckCircle2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 
+import { useRouter, useSearchParams } from "next/navigation"
+
 export function RightSidebar() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const trends = [
     { category: "Technology · Trending", topic: "#NextJS", posts: "125K posts" },
     { category: "Trending in India", topic: "Twinkle", posts: "89.2K posts" },
@@ -27,6 +31,13 @@ export function RightSidebar() {
         <Input
           placeholder="Search"
           className="pl-12 bg-zinc-900 border-none rounded-full h-11 text-white placeholder:text-zinc-500 focus-visible:ring-1 focus-visible:ring-white/20"
+          defaultValue={searchParams.get("q") || ""}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              const value = e.currentTarget.value;
+              router.push(value ? `/dashboard?q=${value}` : "/dashboard");
+            }
+          }}
         />
       </div>
 

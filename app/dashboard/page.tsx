@@ -4,14 +4,20 @@ import { PostsFeed } from "@/components/posts-feed";
 import { getPosts } from "@/backend/actions/posts";
 import { redirect } from "next/navigation";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
     const session = await auth();
 
     if (!session?.user) {
         redirect("/login");
     }
 
-    const posts = await getPosts();
+    const resolvedSearchParams = await searchParams;
+    const query = typeof resolvedSearchParams.q === 'string' ? resolvedSearchParams.q : undefined;
+    const posts = await getPosts(undefined, query);
 
     return (
         <AppLayout user={session.user}>

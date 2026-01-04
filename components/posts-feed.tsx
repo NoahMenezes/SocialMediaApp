@@ -39,6 +39,10 @@ export function PostsFeed({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [loading, setLoading] = useState(false)
 
+  useEffect(() => {
+    setPosts(initialPosts as any)
+  }, [initialPosts])
+
   const handlePostSubmit = async () => {
     if (!newPostContent.trim() || isSubmitting) return
 

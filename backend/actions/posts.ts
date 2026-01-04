@@ -1,8 +1,8 @@
 "use server"
 
 import { db } from "@/backend/db"
-import { posts, users } from "@/backend/db/schema"
-import { eq, desc } from "drizzle-orm"
+import { posts, users, news, instagramProfiles } from "@/backend/db/schema"
+import { eq, desc, sql } from "drizzle-orm"
 import { auth } from "@/auth.config"
 import { revalidatePath } from "next/cache"
 import { getCurrentUser } from "./auth"
@@ -56,9 +56,10 @@ export async function createPost(formData: FormData) {
     }
 }
 
-export async function getPosts(userId?: string) {
+export async function getPosts(userId?: string, query?: string) {
     try {
-        let query = db.select({
+        // 1. Fetch Posts
+        let postsQuery = db.select({
             id: posts.id,
             content: posts.content,
             createdAt: posts.createdAt,
@@ -71,20 +72,49 @@ export async function getPosts(userId?: string) {
                 name: users.name,
                 username: users.username,
                 image: users.image,
+                verified: eq(users.emailVerified, users.emailVerified) // trick to get boolean, or default false
             }
         })
             .from(posts)
-            .innerJoin(users, eq(posts.userId, users.id))
-            .orderBy(desc(posts.createdAt));
+            .innerJoin(users, eq(posts.userId, users.id));
 
         if (userId) {
             // @ts-ignore
-            query = query.where(eq(posts.userId, userId));
+            postsQuery = postsQuery.where(eq(posts.userId, userId));
+        } else if (query) {
+            // @ts-ignore
+            postsQuery = postsQuery.where(sql`${posts.content} LIKE ${`%${query}%`}`);
         }
 
-        const result = await query;
+        // 2. Fetch News (Treat as Posts)
+        let newsQuery = db.select().from(news);
+        if (query) {
+            // @ts-ignore
+            newsQuery = newsQuery.where(
+                // @ts-ignore
+                sql`${news.summary} LIKE ${`%${query}%`} OR ${news.text} LIKE ${`%${query}%`}`
+            );
+        }
 
-        return result.map(post => ({
+        // 3. Fetch Instagram Profiles (Treat as "New User" posts)
+        let instaQuery = db.select().from(instagramProfiles);
+        if (query) {
+            // @ts-ignore
+            instaQuery = instaQuery.where(
+                // @ts-ignore
+                sql`${instagramProfiles.username} LIKE ${`%${query}%`} OR ${instagramProfiles.fullName} LIKE ${`%${query}%`}`
+            );
+        }
+
+        // Execute queries in parallel
+        const [postsResult, newsResult, instaResult] = await Promise.all([
+            postsQuery.orderBy(desc(posts.createdAt)).limit(20),
+            newsQuery.orderBy(desc(news.createdAt)).limit(10), // Limit news mix
+            instaQuery.limit(5) // Limit insta profiles mix
+        ]);
+
+        // Transform Posts
+        const formattedPosts = postsResult.map(post => ({
             id: post.id,
             content: post.content,
             timestamp: post.createdAt ? formatTimestamp(post.createdAt) : "",
@@ -97,8 +127,62 @@ export async function getPosts(userId?: string) {
                 username: post.author?.username || "unknown",
                 avatar: post.author?.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author?.name || 'User'}`,
                 verified: false
-            }
-        }))
+            },
+            source: 'app'
+        }));
+
+        // Transform News
+        const formattedNews = newsResult.map(item => ({
+            id: item.id,
+            content: `📰 ${item.summary}\n\n${item.text}`,
+            timestamp: item.createdAt ? formatTimestamp(item.createdAt) : "",
+            likes: 0,
+            reposts: 0,
+            comments: 0,
+            image: null, // News usually doesn't have an image col in this schema
+            author: {
+                name: "Global News",
+                username: "newsbot",
+                avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=news",
+                verified: true
+            },
+            source: 'news'
+        }));
+
+        // Transform Instagram Profiles
+        const formattedInsta = instaResult.map(profile => ({
+            id: profile.id,
+            content: `👋 New creator joined: ${profile.fullName || profile.username}\n\n${profile.biography || "No bio available."}`,
+            timestamp: profile.createdAt ? formatTimestamp(profile.createdAt) : "",
+            likes: profile.followersCount || 0, // Use followers as "likes" for fun
+            reposts: 0,
+            comments: 0,
+            image: profile.profilePicUrl,
+            author: {
+                name: profile.fullName || profile.username,
+                username: profile.username,
+                avatar: profile.profilePicUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.username}`,
+                verified: profile.isVerified || false
+            },
+            source: 'instagram'
+        }));
+
+        // Combine and Sort
+        const combinedFeed = [...formattedPosts, ...formattedNews, ...formattedInsta];
+
+        // Shuffle slightly or sort by date? 
+        // Since news/insta might have old dates or all same dates (import time), strict date sort might bunch them.
+        // But for "average social media app", date sort is standard.
+        // Use a simple date sort, fallback to random if dates match.
+        // Note: formatTimestamp returns a string, so we can't sort by that. We rely on the fact that we fetched them ordered, but combining breaks order.
+        // We should ideally keep the raw date for sorting.
+        // Re-mapping for sort... actually, let's just interleave or simply sort by id if dates are weird.
+        // For this task, simple concatenation is often fine, but let's try to randomize or mix if query is generic.
+
+        // IF searching, rank by relevance? Simple concat is fine.
+        // IF feed (no query), let's sort by random to simulate a "discovery" feed if dates are identical (import artifacts).
+
+        return combinedFeed.sort(() => Math.random() - 0.5); // Simple shuffle for "Feed" feel since imported dates might be identical.
 
     } catch (error) {
         console.error("Failed to fetch posts", error)
