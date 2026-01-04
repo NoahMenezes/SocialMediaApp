@@ -41,16 +41,7 @@ export function RightSidebar() {
         />
       </div>
 
-      {/* Subscribe to Premium */}
-      <div className="premium-card rounded-2xl p-5 space-y-3">
-        <h2 className="text-xl font-bold text-white text-glow">Subscribe to Premium</h2>
-        <p className="text-[15px] leading-tight text-white/90">
-          Subscribe to unlock new features and if eligible, receive a share of ads revenue.
-        </p>
-        <Button className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full font-bold px-6 shadow-lg shadow-purple-500/20 hover:scale-[1.02] transition-transform active:scale-[0.98]">
-          Subscribe
-        </Button>
-      </div>
+
 
       {/* Trends for you */}
       <div className="premium-card rounded-2xl overflow-hidden">
