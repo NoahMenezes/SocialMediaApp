@@ -26,6 +26,7 @@ interface Post {
   image?: string
   isLiked?: boolean
   isReposted?: boolean
+  isRepost?: boolean
 }
 
 export function PostCard({ post, index }: { post: Post; index: number }) {
@@ -69,6 +70,12 @@ export function PostCard({ post, index }: { post: Post; index: number }) {
       transition={{ duration: 0.3, delay: index * 0.05 }}
       className="p-4 border-b border-white/5 hover:bg-white/[0.02] transition-colors cursor-pointer group"
     >
+      {post.isRepost && (
+        <div className="flex items-center gap-2 text-zinc-500 text-sm mb-2 pl-12 font-bold">
+            <Repeat2 className="w-4 h-4" />
+            <span>Reposted</span>
+        </div>
+      )}
       <div className="flex gap-4">
         {/* Avatar */}
         <Link href={`/profile/${post.author.username}`} onClick={(e) => e.stopPropagation()}>

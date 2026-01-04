@@ -1,7 +1,7 @@
 "use server"
 
 import { db } from "@/backend/db"
-import { posts, users, news, instagramProfiles } from "@/backend/db/schema"
+import { posts, users, news, instagramProfiles, reposts } from "@/backend/db/schema"
 import { eq, desc, sql } from "drizzle-orm"
 import { auth } from "@/auth.config"
 import { revalidatePath } from "next/cache"
@@ -60,8 +60,8 @@ export async function getPosts(userId?: string, query?: string, page: number = 1
     try {
         const offset = (page - 1) * pageSize;
 
-        // 1. Fetch Posts
-        let postsQuery = db.select({
+        // Common definition for post selection to ensure consistency
+        const postSelect = {
             id: posts.id,
             content: posts.content,
             createdAt: posts.createdAt,
@@ -76,13 +76,27 @@ export async function getPosts(userId?: string, query?: string, page: number = 1
                 image: users.image,
                 verified: eq(users.emailVerified, users.emailVerified)
             }
-        })
+        };
+
+        // 1. Fetch Posts
+        let postsQuery = db.select(postSelect)
             .from(posts)
             .innerJoin(users, eq(posts.userId, users.id));
+
+        // 2. Prepare Reposts Query (Only for Profile View)
+        let repostsQuery: any = null;
 
         if (userId) {
             // @ts-ignore
             postsQuery = postsQuery.where(eq(posts.userId, userId));
+
+            // Setup reposts query: Select Post + Original Author, JOIN Reposts to filter by 'reposter params'
+            repostsQuery = db.select(postSelect)
+                .from(reposts)
+                .innerJoin(posts, eq(reposts.postId, posts.id))
+                .innerJoin(users, eq(posts.userId, users.id)) // Join original author
+                .where(eq(reposts.userId, userId));
+
         } else if (query) {
             // @ts-ignore
             postsQuery = postsQuery.where(sql`${posts.content} LIKE ${`%${query}%`}`);
@@ -109,14 +123,9 @@ export async function getPosts(userId?: string, query?: string, page: number = 1
         }
 
         // Execute queries in parallel with LIMIT and OFFSET
-        // For mixed feed, we split the limit among sources roughly, or just fetch page size for main posts and smaller subset for others
-        // To keep it simple and efficient: 
-        // - Posts: fetch 'pageSize'
-        // - News: fetch 'pageSize / 4' (fewer news than posts)
-        // - Insta: fetch 'pageSize / 4'
-
-        const [postsResult, newsResult, instaResult] = await Promise.all([
+        const [postsResult, repostsResult, newsResult, instaResult] = await Promise.all([
             postsQuery.orderBy(desc(posts.createdAt)).limit(pageSize).offset(offset),
+            repostsQuery ? repostsQuery.orderBy(desc(reposts.createdAt)).limit(pageSize).offset(offset) : Promise.resolve([]),
             newsQuery.orderBy(desc(news.createdAt)).limit(Math.max(2, Math.floor(pageSize / 4))).offset(Math.floor(offset / 4)),
             instaQuery.limit(Math.max(2, Math.floor(pageSize / 4))).offset(Math.floor(offset / 4))
         ]);
@@ -136,7 +145,27 @@ export async function getPosts(userId?: string, query?: string, page: number = 1
                 avatar: post.author?.image || "", // Empty if no image
                 verified: false
             },
-            source: 'app'
+            source: 'app',
+            isRepost: false
+        }));
+
+        // Transform Reposts
+        const formattedReposts = (repostsResult as any[]).map(post => ({
+            id: post.id,
+            content: post.content,
+            timestamp: post.createdAt ? formatTimestamp(post.createdAt) : "",
+            likes: post.likesCount || 0,
+            reposts: post.reblogsCount || 0,
+            comments: post.repliesCount || 0,
+            image: post.image,
+            author: {
+                name: post.author?.name || "Unknown",
+                username: post.author?.username || "unknown",
+                avatar: post.author?.image || "",
+                verified: false
+            },
+            source: 'app',
+            isRepost: true
         }));
 
         // Transform News
@@ -176,7 +205,8 @@ export async function getPosts(userId?: string, query?: string, page: number = 1
         }));
 
         // Combine and Sort
-        const combinedFeed = [...formattedPosts, ...formattedNews, ...formattedInsta];
+        // Combine and Sort
+        const combinedFeed = [...formattedPosts, ...formattedReposts, ...formattedNews, ...formattedInsta];
 
         // Shuffle slightly or sort by date? 
         // Since news/insta might have old dates or all same dates (import time), strict date sort might bunch them.
