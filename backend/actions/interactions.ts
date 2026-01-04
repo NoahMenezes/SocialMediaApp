@@ -117,5 +117,6 @@ export async function toggleRepost(postId: string) {
     }
 
     revalidatePath("/");
+    revalidatePath("/reposts");
     revalidatePath(`/profile`);
 }

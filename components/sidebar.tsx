@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, Search, Bell, Bookmark, User, MoreHorizontal, Hash, Twitter, PlusSquare } from "lucide-react"
+import { Home, Search, Bell, Bookmark, User, MoreHorizontal, Hash, Twitter, PlusSquare, Repeat2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import Link from "next/link"
@@ -15,6 +15,7 @@ export function Sidebar({ user }: { user?: { name?: string | null; email?: strin
     { icon: Hash, label: "Explore", href: "/explore" },
     { icon: Bell, label: "Notifications", href: "/notifications" },
     { icon: Bookmark, label: "Bookmarks", href: "/bookmarks" },
+    { icon: Repeat2, label: "Reposts", href: "/reposts" },
     { icon: User, label: "Profile", href: `/profile/${user?.username || 'me'}` },
   ]
 
