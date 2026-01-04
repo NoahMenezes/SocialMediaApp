@@ -7,6 +7,13 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  devIndicators: {
+    appIsrStatus: false,
+    buildActivity: false,
+  },
+  experimental: {
+    reactCompiler: true,
+  },
   webpack: (config, { isServer }) => {
     // Ignore large data files to prevent memory issues
     config.watchOptions = {
