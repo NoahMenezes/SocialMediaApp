@@ -56,8 +56,10 @@ export async function createPost(formData: FormData) {
     }
 }
 
-export async function getPosts(userId?: string, query?: string) {
+export async function getPosts(userId?: string, query?: string, page: number = 1, pageSize: number = 20) {
     try {
+        const offset = (page - 1) * pageSize;
+
         // 1. Fetch Posts
         let postsQuery = db.select({
             id: posts.id,
@@ -72,7 +74,7 @@ export async function getPosts(userId?: string, query?: string) {
                 name: users.name,
                 username: users.username,
                 image: users.image,
-                verified: eq(users.emailVerified, users.emailVerified) // trick to get boolean, or default false
+                verified: eq(users.emailVerified, users.emailVerified)
             }
         })
             .from(posts)
@@ -106,11 +108,17 @@ export async function getPosts(userId?: string, query?: string) {
             );
         }
 
-        // Execute queries in parallel
+        // Execute queries in parallel with LIMIT and OFFSET
+        // For mixed feed, we split the limit among sources roughly, or just fetch page size for main posts and smaller subset for others
+        // To keep it simple and efficient: 
+        // - Posts: fetch 'pageSize'
+        // - News: fetch 'pageSize / 4' (fewer news than posts)
+        // - Insta: fetch 'pageSize / 4'
+
         const [postsResult, newsResult, instaResult] = await Promise.all([
-            postsQuery.orderBy(desc(posts.createdAt)).limit(20),
-            newsQuery.orderBy(desc(news.createdAt)).limit(10), // Limit news mix
-            instaQuery.limit(5) // Limit insta profiles mix
+            postsQuery.orderBy(desc(posts.createdAt)).limit(pageSize).offset(offset),
+            newsQuery.orderBy(desc(news.createdAt)).limit(Math.max(2, Math.floor(pageSize / 4))).offset(Math.floor(offset / 4)),
+            instaQuery.limit(Math.max(2, Math.floor(pageSize / 4))).offset(Math.floor(offset / 4))
         ]);
 
         // Transform Posts
