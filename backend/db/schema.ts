@@ -137,20 +137,6 @@ export const notifications = sqliteTable("notifications", {
     createdAt: integer("created_at", { mode: 'timestamp' }).$defaultFn(() => new Date()),
 });
 
-// --- Existing Chat (kept for safety) ---
-export const conversations = sqliteTable("conversations", {
-    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-    createdAt: integer("created_at", { mode: 'timestamp' }),
-    updatedAt: integer("updated_at", { mode: 'timestamp' }),
-});
-
-export const conversationParticipants = sqliteTable("conversation_participants", {
-    conversationId: text("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
-    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-    joinedAt: integer("joined_at", { mode: 'timestamp' }),
-}, (table) => ({
-    pk: primaryKey({ columns: [table.conversationId, table.userId] })
-}));
 
 // --- Media Attachments ---
 export const mediaAttachments = sqliteTable("media_attachments", {
@@ -238,19 +224,6 @@ export const mutes = sqliteTable("mutes", {
     pk: primaryKey({ columns: [table.muterId, table.mutedId] })
 }));
 
-// --- NEW Chat (Simple) ---
-export const messages = sqliteTable('messages', {
-    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-    senderId: text('sender_id')
-        .notNull()
-        .references(() => users.id, { onDelete: 'cascade' }),
-    receiverId: text('receiver_id')
-        .notNull()
-        .references(() => users.id, { onDelete: 'cascade' }),
-    content: text('content').notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
-    readAt: integer('read_at', { mode: 'timestamp' }),
-});
 
 // --- News Items ---
 export const news = sqliteTable("news", {
@@ -309,8 +282,6 @@ export type Follow = typeof follows.$inferSelect;
 export type NewFollow = typeof follows.$inferInsert;
 export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;
-export type Message = typeof messages.$inferSelect;
-export type NewMessage = typeof messages.$inferInsert;
 export type MediaAttachment = typeof mediaAttachments.$inferSelect;
 export type NewMediaAttachment = typeof mediaAttachments.$inferInsert;
 export type Hashtag = typeof hashtags.$inferSelect;

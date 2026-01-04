@@ -14,7 +14,6 @@ export function Sidebar({ user }: { user?: { name?: string | null; email?: strin
     { icon: Home, label: "Home", href: "/dashboard" },
     { icon: Hash, label: "Explore", href: "/explore" },
     { icon: Bell, label: "Notifications", href: "/notifications" },
-    { icon: Mail, label: "Messages", href: "/messages" },
     { icon: Bookmark, label: "Bookmarks", href: "/bookmarks" },
     { icon: User, label: "Profile", href: `/profile/${user?.username || 'me'}` },
   ]
