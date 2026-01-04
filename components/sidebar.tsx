@@ -62,14 +62,18 @@ export function Sidebar({ user }: { user?: { name?: string | null; email?: strin
 
         {/* Post Button */}
         <div className="pt-6 px-1">
-          <Button className="w-full h-14 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold text-lg hidden xl:block shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:shadow-[0_0_30px_rgba(168,85,247,0.6)] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] border border-white/20 relative overflow-hidden group">
-            <span className="relative z-10 text-glow">Post</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          </Button>
-          <div className="xl:hidden flex justify-center">
-            <Button size="icon" className="w-14 h-14 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg hover:shadow-purple-500/50 transition-all">
-              <PlusSquare className="w-7 h-7" />
+          <Link href="/compose/post">
+            <Button className="w-full h-14 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold text-lg hidden xl:block shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:shadow-[0_0_30px_rgba(168,85,247,0.6)] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] border border-white/20 relative overflow-hidden group">
+              <span className="relative z-10 text-glow">Post</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </Button>
+          </Link>
+          <div className="xl:hidden flex justify-center">
+            <Link href="/compose/post">
+              <Button size="icon" className="w-14 h-14 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg hover:shadow-purple-500/50 transition-all">
+                <PlusSquare className="w-7 h-7" />
+              </Button>
+            </Link>
           </div>
         </div>
       </nav>

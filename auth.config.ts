@@ -13,6 +13,7 @@ declare module "next-auth" {
     interface Session {
         user: {
             id: string;
+            username?: string | null;
         } & DefaultSession["user"]
     }
 }
@@ -80,6 +81,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     email: user.email,
                     name: user.name,
                     image: user.image,
+                    username: user.username,
                 };
             },
         }),
@@ -110,14 +112,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             return true;
         },
         async session({ session, user, token }: any) {
-            if (session.user && (user?.id || token?.id)) {
-                session.user.id = user?.id || (token?.id as string);
+            if (session.user) {
+                if (user?.id) session.user.id = user.id;
+                if (token?.id) session.user.id = token.id as string;
+
+                if (user?.username) session.user.username = user.username;
+                if (token?.username) session.user.username = token.username as string;
             }
             return session;
         },
         async jwt({ token, user }: any) {
             if (user) {
                 token.id = user.id;
+                token.username = user.username;
             }
             return token;
         },
