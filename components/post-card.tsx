@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Heart, MessageCircle, Share, Bookmark, MoreHorizontal, Repeat2 } from "lucide-react"
 import Link from "next/link"
-import { toggleLike, addComment } from "@/backend/actions/interactions"
+import { toggleLike, addComment, toggleRepost } from "@/backend/actions/interactions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
@@ -54,7 +54,12 @@ export function PostCard({ post, index }: { post: Post; index: number }) {
     const newReposted = !reposted
     setReposted(newReposted)
     setRepostCount(prev => newReposted ? prev + 1 : prev - 1)
-    // Add logic here if toggleRepost action exists
+    try {
+        await toggleRepost(post.id)
+    } catch (error) {
+        setReposted(!newReposted)
+        setRepostCount(repostCount)
+    }
   }
 
   return (
@@ -181,6 +186,27 @@ export function PostCard({ post, index }: { post: Post; index: number }) {
                     size="sm"
                     className="rounded-full bg-white text-black hover:bg-white/90 font-bold h-9 px-4"
                     disabled={!commentText.trim()}
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (!commentText.trim()) return;
+                      try {
+                        await addComment(post.id, commentText);
+                        setCommentText("");
+                        setShowCommentInput(false);
+                        // Optimistically update comment count (optional, but good UX)
+                        /* In a real app, you might want to update a local comments list or 
+                           re-fetch post data. For now, we rely on the server validation 
+                           (revalidatePath) to update the UI on next interaction/refresh 
+                           or we can just increment locally if we track comment count in state. 
+                        */
+                        /* If we want to update the count locally: 
+                           setCommentsCount(prev => prev + 1); 
+                           (We would need a state for comments count too, similar to likes/reposts)
+                        */
+                      } catch (error) {
+                        console.error("Failed to add comment:", error);
+                      }
+                    }}
                   >
                     Reply
                   </Button>

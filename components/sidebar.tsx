@@ -20,7 +20,7 @@ export function Sidebar({ user }: { user?: { name?: string | null; email?: strin
   ]
 
   return (
-    <aside className="fixed md:sticky top-0 left-0 h-screen w-20 xl:w-72 bg-black border-r border-white/5 flex flex-col py-4 select-none z-50 overflow-y-auto">
+    <aside className="fixed top-0 left-0 h-screen w-20 xl:w-[420px] premium-glass border-r-0 border-r-white/5 flex flex-col py-4 select-none overflow-y-auto no-scrollbar flex-shrink-0 z-20">
       {/* Logo */}
       <div className="px-4 mb-4 flex justify-center xl:justify-start">
         <Link href="/dashboard" className="w-12 h-12 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors">
@@ -29,7 +29,7 @@ export function Sidebar({ user }: { user?: { name?: string | null; email?: strin
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-2 space-y-1">
+      <nav className="flex-1 px-4 space-y-4">
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href
@@ -38,30 +38,37 @@ export function Sidebar({ user }: { user?: { name?: string | null; email?: strin
               <Link
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-4 p-3 rounded-full transition-all duration-200 group hover:bg-white/10 w-fit xl:pr-8",
-                  isActive ? "font-bold" : "font-normal"
+                  "flex items-center gap-5 p-3 px-4 rounded-3xl transition-all duration-300 group hover:bg-white/10 w-fit xl:w-full",
+                  isActive ? "bg-white/10 backdrop-blur-md shadow-[0_0_20px_rgba(255,255,255,0.1)] border border-white/5" : "hover:scale-105"
                 )}
               >
-                <Icon
-                  className={cn(
-                    "w-7 h-7 transition-transform group-active:scale-95",
-                    isActive ? "stroke-[3px]" : "stroke-2"
-                  )}
-                />
-                <span className="hidden xl:block text-xl">{item.label}</span>
+                <div className="relative">
+                  <Icon
+                    className={cn(
+                      "w-7 h-7 transition-all duration-300",
+                      isActive ? "text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" : "text-white/80 group-hover:text-white"
+                    )}
+                  />
+                  {isActive && <div className="absolute inset-0 bg-white/20 blur-lg rounded-full" />}
+                </div>
+                <span className={cn(
+                  "hidden xl:block text-xl tracking-wide",
+                  isActive ? "font-bold text-white text-glow" : "font-medium text-white/80 group-hover:text-white"
+                )}>{item.label}</span>
               </Link>
             </div>
           )
         })}
 
         {/* Post Button */}
-        <div className="pt-4 px-2">
-          <Button className="w-full h-12 rounded-full bg-white text-black hover:bg-white/90 font-bold text-lg hidden xl:block shadow-lg shadow-white/5">
-            Post
+        <div className="pt-6 px-1">
+          <Button className="w-full h-14 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-bold text-lg hidden xl:block shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:shadow-[0_0_30px_rgba(168,85,247,0.6)] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] border border-white/20 relative overflow-hidden group">
+            <span className="relative z-10 text-glow">Post</span>
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </Button>
           <div className="xl:hidden flex justify-center">
-            <Button size="icon" className="w-12 h-12 rounded-full bg-white text-black hover:bg-white/90 shadow-lg shadow-white/5">
-              <PlusSquare className="w-6 h-6" />
+            <Button size="icon" className="w-14 h-14 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg hover:shadow-purple-500/50 transition-all">
+              <PlusSquare className="w-7 h-7" />
             </Button>
           </div>
         </div>

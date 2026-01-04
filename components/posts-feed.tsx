@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { PostCard } from "./post-card"
-import { Stories } from "./stories"
+
 import { getPosts, createPost } from "@/backend/actions/posts"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -67,11 +67,6 @@ export function PostsFeed({
       {/* Header */}
       <div className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-white/5 py-4 px-4">
         <h2 className="text-xl font-bold text-white">Home</h2>
-      </div>
-
-      {/* Stories (Keeping them but they will be more subtle) */}
-      <div className="border-b border-white/5 py-4 overflow-hidden">
-        <Stories user={user} />
       </div>
 
       {/* Create Post Area */}

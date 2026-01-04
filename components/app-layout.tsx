@@ -20,13 +20,31 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, user, className }: AppLayoutProps) {
   return (
-    <div className="flex min-h-screen bg-background justify-center">
-      <div className="w-full max-w-[1400px] flex justify-center xl:justify-between relative">
+    <div className="min-h-screen bg-black w-full relative overflow-x-hidden selection:bg-purple-500/30">
+      {/* Cinematic Background Layer */}
+      <div className="fixed inset-0 z-0">
+        <div className="absolute top-0 left-[-20%] w-[700px] h-[700px] bg-purple-900/20 rounded-full mix-blend-screen filter blur-[120px] opacity-40 animate-blob" />
+        <div className="absolute top-[-10%] right-[-20%] w-[600px] h-[600px] bg-indigo-900/20 rounded-full mix-blend-screen filter blur-[100px] opacity-40 animate-blob animation-delay-2000" />
+        <div className="absolute bottom-[-20%] left-[20%] w-[500px] h-[500px] bg-blue-900/20 rounded-full mix-blend-screen filter blur-[100px] opacity-40 animate-blob animation-delay-4000" />
+        {/* Subtle Warmth (Champagne) */}
+        <div className="absolute top-[40%] right-[30%] w-[400px] h-[400px] bg-orange-500/5 rounded-full mix-blend-screen filter blur-[120px] opacity-30 animate-blob animation-delay-4000" />
+      </div>
+
+      {/* Noise Texture Overlay */}
+      <div className="bg-noise" />
+
+      {/* Content Layer */}
+      <div className="flex relative z-10 justify-center min-h-screen">
         {/* Left Sidebar */}
         <Sidebar user={user} />
 
         {/* Main Content */}
-        <main className={cn("flex-1 max-w-[700px] w-full border-x border-border/40 min-h-screen flex flex-col", className)}>
+        <main className={cn(
+          "flex-1 max-w-[1000px] border-x border-white/5 min-h-screen flex flex-col bg-black/20 backdrop-blur-sm",
+          "ml-20 xl:ml-[420px]", // Offset for Left Sidebar
+          "lg:mr-80 xl:mr-[600px]", // Offset for Right Sidebar
+          className
+        )}>
           {children}
         </main>
 
@@ -36,4 +54,3 @@ export function AppLayout({ children, user, className }: AppLayoutProps) {
     </div>
   );
 }
-
