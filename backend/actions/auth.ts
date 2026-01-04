@@ -174,6 +174,16 @@ export async function signInWithGoogle(formData?: FormData): Promise<void> {
 }
 
 // ============================================
+// MASTODON OAUTH AUTHENTICATION
+// ============================================
+
+export async function signInWithMastodon(formData?: FormData): Promise<void> {
+  await nextAuthSignIn("mastodon", {
+    redirectTo: "/", // Redirect to home page after successful login
+  });
+}
+
+// ============================================
 // LOGOUT
 // ============================================
 
