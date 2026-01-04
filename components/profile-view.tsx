@@ -91,7 +91,7 @@ export function ProfileView({
                   className={`w-32 h-32 sm:w-36 sm:h-36 border-4 border-black ${isOwnProfile ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
                   onClick={handleImageClick}
                 >
-                  <AvatarImage src={user.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} />
+                  <AvatarImage src={user.image || ""} />
                   <AvatarFallback className="bg-zinc-800 text-white text-3xl font-bold">{user.name[0]}</AvatarFallback>
                 </Avatar>
                 {isOwnProfile && (
