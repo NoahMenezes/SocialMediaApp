@@ -2,43 +2,29 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: true, // Disable type checking during build to save memory
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: true, // Disable linting during build to save memory
   },
   webpack: (config, { isServer }) => {
-    // Ignore large data files to prevent memory issues
-    config.watchOptions = {
-      ...config.watchOptions,
-      ignored: [
-        '**/node_modules',
-        '**/.git',
-        '**/.next',
-        '**/raw_data/**',
-        '**/db/**',
-        '**/local.db',
-      ],
-    };
-
-    // Optimize cache settings
-    config.cache = {
-      type: 'filesystem',
-      compression: 'gzip',
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-    };
-
-    // Reduce parallel processing to save memory
-    config.parallelism = 1;
-
-    // Exclude CSV and large JSON files from being processed
-    config.module.rules.push({
-      test: /\.(csv)$/,
-      use: 'ignore-loader',
-    });
+    // Ignore large data files to prevent memory issues during watch
+    if (config.watchOptions) {
+      config.watchOptions = {
+        ...config.watchOptions,
+        ignored: [
+          '**/node_modules',
+          '**/.git',
+          '**/.next',
+          '**/raw_data/**',
+          '**/local.db',
+        ],
+      };
+    }
 
     return config;
   },
 };
 
 export default nextConfig;
+

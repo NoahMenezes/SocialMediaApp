@@ -87,10 +87,13 @@ async function importInstagramComments() {
 }
 
 async function importInstagramProfiles() {
-    console.log('Starting Instagram profiles import from /db folder...');
-    const dbDir = path.join(process.cwd(), 'db');
-    if (!fs.existsSync(dbDir)) return;
+    console.log('Starting Instagram profiles import...');
+    const dbDir = path.join(process.cwd(), 'raw_data', 'instagram_profiles');
 
+    if (!fs.existsSync(dbDir)) {
+        console.log('Instagram profiles directory not found. Skipping...');
+        return;
+    }
     const files = fs.readdirSync(dbDir).filter((f: string) => f.endsWith('.json'));
     let batch = [];
     const BATCH_SIZE = 100;

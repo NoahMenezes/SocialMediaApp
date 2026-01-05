@@ -98,10 +98,16 @@ async function importInstagramComments() {
 }
 
 async function importInstagramProfiles() {
-    console.log('👤 Importing Instagram Profiles from JSON files...');
+    console.log('\n📸 Importing Instagram profiles from JSON files...');
+    const dbPath = path.join(process.cwd(), 'raw_data', 'instagram_profiles');
 
-    const dbPath = path.join(process.cwd(), 'db');
+    if (!fs.existsSync(dbPath)) {
+        console.log('❌ Instagram profiles directory not found. Skipping...');
+        return;
+    }
+
     const files = fs.readdirSync(dbPath).filter(f => f.endsWith('.json'));
+
 
     console.log(`Found ${files.length} JSON profile files`);
 
